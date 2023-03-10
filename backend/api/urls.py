@@ -12,9 +12,9 @@ from .views import (
 router = routers.DefaultRouter()
 
 router.register('recipes', RecipeViewSet, basename='recipes')
-router.register('tags', TagViewSet, basename='tags')
-router.register('ingredients', IngredientViewSet, basename='ingredients')
-router.register('users', CustomUserViewSet, basename='users')
+# router.register('tags', TagViewSet, basename='tags')
+# router.register('ingredients', IngredientViewSet, basename='ingredients')
+# router.register('users', CustomUserViewSet, basename='users')
 
 urlpatterns = [
     path('auth/', include('djoser.urls.authtoken')),
