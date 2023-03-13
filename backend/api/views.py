@@ -39,9 +39,8 @@ User = get_user_model()
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    ...
-    # queryset = Recipe.objects.all()
-    # serializer_class = RecipeSerializer
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
     # permission_classes = [
     #     IsAuthorOrReadOnly,
     # ]
@@ -75,8 +74,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #         return Favorite.objects.all()
     #     return Recipe.objects.all()
 
-    # def perform_create(self, serializer):
-    #     serializer.save(author=self.request.user)
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
     # def user_recipe_relation(self, request, data, **kwargs):
     #     user = self.request.user
