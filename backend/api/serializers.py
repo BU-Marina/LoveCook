@@ -115,7 +115,6 @@ class RecipeRepresentationSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    ...
     # ingredients = RecipeIngredientSerializer(
     #     many=True, read_only=False, source='recipe_ingredients'
     # )
@@ -125,12 +124,11 @@ class RecipeSerializer(serializers.ModelSerializer):
     # )
     # image = Base64ImageField(required=True, read_only=False)
 
-    # class Meta:
-    #     model = Recipe
-    #     fields = (
-    #         'ingredients', 'tags', 'image', 'name', 'text',
-    #         'cooking_time'
-    #     )
+    class Meta:
+        model = Recipe
+        fields = (
+            'title', 'description'
+        )
 
     # def validate(self, data):
     #     if not data['recipe_ingredients']:
