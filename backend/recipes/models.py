@@ -76,6 +76,10 @@ class Category(CreatedModel):
     )
 
 
+def getDefaultCategory():
+    return Category.objects.get_or_create(name='Другое') #*
+
+
 class Selection(CreatedModel):
     title = models.CharField(
         max_length=200,
@@ -91,7 +95,11 @@ class Selection(CreatedModel):
         verbose_name='Картинка',
         help_text='Загрузите обложку для подборки',
     )
-    category = models.ForeignKey(Category, related_name='selections')
+    category = models.ForeignKey(
+        Category,
+        related_name='selections',
+        on_delete=models.SET(getDefaultCategory)
+    )
 
     def __str__(self) -> str:
         return self.title
@@ -198,13 +206,11 @@ class RecipeImage(models.Model):
 class SelectionRecipe(CreatedModel):
     selection = models.ForeignKey(
         Selection,
-        on_delete=models.CASCADE,
-        related_name='recipes'
+        on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE,
-        related_name='selections'
+        on_delete=models.CASCADE
     )
 
     class Meta:
@@ -237,8 +243,7 @@ class RecipeIngredient(models.Model):
     ]
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE,
-        related_name='ingredients'
+        on_delete=models.CASCADE
     )
     ingredient = models.ForeignKey(
         Ingredient,
