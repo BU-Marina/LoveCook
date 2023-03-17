@@ -71,9 +71,11 @@ class Tag(models.Model):
 class Category(CreatedModel):
     name = models.CharField(
         max_length=200,
+        unique=True,
         verbose_name='Название',
         help_text='Дайте название категории подборок'
     )
+    description = models.TextField(verbose_name='Описание')
 
 
 def getDefaultCategory():
@@ -108,6 +110,7 @@ class Selection(CreatedModel):
 class Cuisine(CreatedModel):
     name = models.CharField(
         max_length=200,
+        unique=True,
         verbose_name='Название'
     )
     description = models.TextField(verbose_name='Описание')
@@ -125,7 +128,8 @@ class Recipe(CreatedModel):
     )
     description = models.TextField(
         verbose_name='Описание',
-        help_text='Опишите блюдо'
+        help_text='Опишите блюдо',
+        blank=True
     )
     servings = models.PositiveSmallIntegerField(
         verbose_name='Кол-во порций',
@@ -147,12 +151,15 @@ class Recipe(CreatedModel):
             'Завершите рецепт пожеланием приятного аппетита '
             'или вашей авторской фразой'
         ),
-        default='Приятного аппетита!'
+        default='Приятного аппетита!',
+        blank=True
     )
     video = models.FileField(
-        upload_to='recipes/',
+        upload_to='recipes/videos',
         verbose_name='Видео приготовления',
-        help_text='Загрузите видео приготовления блюда по этому рецепту'
+        help_text='Загрузите видео приготовления блюда по этому рецепту',
+        blank=True,
+        null=True
     )
     cuisine = models.ForeignKey(
         Cuisine,
@@ -191,11 +198,11 @@ class RecipeImage(models.Model):
         related_name='images'
     )
     image = models.ImageField(
-        upload_to='recipes/',
+        upload_to='recipes/images/',
         verbose_name='Фото',
         help_text='Загрузите картинку готового блюда',
     )
-    is_cover = models.BooleanField()
+    is_cover = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         if self.is_cover:
