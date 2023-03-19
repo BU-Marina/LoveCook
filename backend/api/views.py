@@ -56,12 +56,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #         return (IsAuthenticated(),)
     #     return super().get_permissions()
 
-    # def get_serializer_class(self):
-    #     if self.action == 'shopping_cart':
-    #         return ShoppingCartSerializer
-    #     if self.action == 'favorite':
-    #         return FavoriteSerializer
-    #     return RecipeSerializer
+    def get_serializer_class(self):
+        # if self.action == 'shopping_cart':
+        #     return ShoppingCartSerializer
+        if self.action == 'favorite':
+            return FavoriteSerializer
+        return RecipeSerializer
 
     # def get_queryset(self):
     #     if self.action == 'shopping_cart':
@@ -74,37 +74,41 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #         return Favorite.objects.all()
     #     return Recipe.objects.all()
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+    # def perform_create(self, serializer):
+    #     serializer.save(author=self.request.user)
 
-    # def user_recipe_relation(self, request, data, **kwargs):
-    #     user = self.request.user
-    #     model = kwargs.get('model')
-    #     error_message = kwargs.get('error_message')
-    #     recipe_id = data.get('pk')
-    #     recipe = get_object_or_404(Recipe, pk=recipe_id)
+    def user_recipe_relation(self, request, pk, **kwargs):
+        user = self.request.user # replace with CurrentuserDefault in serializer
+        model = kwargs.get('model')
+        error_message = kwargs.get('error_message')
+        print('!')
 
-    #     if request.method == 'POST':
-    #         serializer = self.get_serializer(data={
-    #             'user': user.id,
-    #             'recipe': recipe.id
-    #         })
-    #         serializer.is_valid(raise_exception=True)
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if request.method == 'POST':
+            serializer = self.get_serializer(data={
+                'user': user.id,
+                'recipe': pk
+            })
+            # serializer = self.get_serializer(data=request.data)
+            # print(serializer.initial_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    #     if request.method == 'DELETE':
-    #         try:
-    #             relation = model.objects.get(
-    #                 user=user,
-    #                 recipe=recipe
-    #             )
-    #         except model.DoesNotExist:
-    #             raise ValidationError(error_message)
+        if request.method == 'DELETE':
+            recipe = get_object_or_404(Recipe, id=pk)
 
-    #         self.perform_destroy(relation)
-    #         return Response(status=status.HTTP_204_NO_CONTENT)
-    #     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            try:
+                relation = model.objects.get(
+                    user=user,
+                    recipe=recipe
+                )
+            except model.DoesNotExist:
+                raise ValidationError(error_message)
+
+            self.perform_destroy(relation)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     # @action(methods=['post', 'delete'], detail=True)
     # def shopping_cart(self, request, *args, **kwargs):
@@ -116,12 +120,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #         )
     #     )
 
-    # @action(methods=['post', 'delete'], detail=True)
-    # def favorite(self, request, *args, **kwargs):
-    #     return self.user_recipe_relation(
-    #         request, kwargs, model=Favorite,
-    #         error_message='Этот рецепт уже не находится у вас в избранном.'
-    #     )
+    @action(methods=['post', 'delete'], detail=True)
+    def favorite(self, request, *args, **kwargs):
+        return self.user_recipe_relation(
+            request, kwargs.get('pk'), model=Favorite,
+            error_message='Этот рецепт уже не находится у вас в избранном.'
+        )
 
     # @action(methods=['get'], detail=False)
     # def download_shopping_cart(self, request, *args, **kwargs):
