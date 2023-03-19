@@ -2,25 +2,14 @@ from functools import reduce
 
 from django.contrib.auth import get_user_model
 
+from djoser.serializers import UserCreateSerializer
+from drf_extra_fields.fields import Base64FileField, Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from djoser.serializers import UserCreateSerializer
-from drf_extra_fields.fields import Base64ImageField, Base64FileField
-
-from recipes.models import (
-    Favorite,
-    Ingredient,
-    Recipe,
-    RecipeImage,
-    Cuisine,
-    RecipeIngredient,
-    Selection,
-    ShoppingCart,
-    Tag,
-    MIN_COOKING_TIME,
-    MAX_COOKING_TIME
-)
+from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
+                            Favorite, Ingredient, Recipe, RecipeImage,
+                            RecipeIngredient, Selection, ShoppingCart, Tag)
 from users.models import Follow
 
 RECIPES_LIMIT_DEFAULT = '6'

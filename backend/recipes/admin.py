@@ -1,19 +1,8 @@
 from django.contrib import admin
 
-from .models import (
-    Favorite,
-    Ingredient,
-    Recipe,
-    RecipeIngredient,
-    RecipeImage,
-    ShoppingCart,
-    Tag,
-    Category,
-    Selection,
-    SelectionRecipe,
-    Cuisine
-)
-
+from .models import (Category, Cuisine, Favorite, Ingredient, Recipe,
+                     RecipeImage, RecipeIngredient, Selection, SelectionRecipe,
+                     ShoppingCart, Tag)
 
 # class RecipeAdmin(admin.ModelAdmin):
 #     list_display = ('title', 'images')

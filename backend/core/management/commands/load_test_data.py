@@ -1,25 +1,17 @@
-import json
 import base64
+import json
 import os
 
-from django.core.management import BaseCommand
-from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
+from django.core.files.base import ContentFile
+from django.core.management import BaseCommand
 
 from foodgram.settings import BASE_DIR
-from recipes.models import (
-    Ingredient,
-    Tag,
-    Category,
-    Selection,
-    Cuisine,
-    Recipe,
-    SelectionRecipe,
-    RecipeImage,
-    RecipeIngredient,
-    Favorite
-)
+from recipes.models import (Category, Cuisine, Favorite, Ingredient, Recipe,
+                            RecipeImage, RecipeIngredient, Selection,
+                            SelectionRecipe, Tag)
+
 # from users.models import Follow
 
 User = get_user_model()
