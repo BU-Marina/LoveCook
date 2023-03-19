@@ -5,29 +5,40 @@ from .models import (
     Ingredient,
     Recipe,
     RecipeIngredient,
+    RecipeImage,
     ShoppingCart,
-    Tag
+    Tag,
+    Category,
+    Selection,
+    SelectionRecipe,
+    Cuisine
 )
 
 
 # class RecipeAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'author', 'pub_date')
-#     list_filter = ('name', 'author', 'tags')
-#     readonly_fields = ('favorited_by',)
+#     list_display = ('title', 'images')
+#     list_filter = ('title', 'author', 'tags')
+    # readonly_fields = ('favorited_by',)
 
-#     def favorited_by(self, obj):
-#         return obj.favorited.count()
+    # def favorited_by(self, obj):
+    #     return obj.favorited.count()
 
 
 # class IngredientAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'measurement_unit')
+#     list_display = ('name', 'description')
 #     list_filter = ('name',)
 
 admin.site.register(Recipe)
+admin.site.register(RecipeImage)
+admin.site.register(Ingredient)
+admin.site.register(RecipeIngredient)
+admin.site.register(Category)
+admin.site.register(Selection)
+admin.site.register(SelectionRecipe)
+admin.site.register(Cuisine)
 
 # admin.site.register(Recipe, RecipeAdmin)
 # admin.site.register(Ingredient, IngredientAdmin)
-# admin.site.register(RecipeIngredient)
-# admin.site.register(Tag)
-# admin.site.register(Favorite)
+admin.site.register(Tag)
+admin.site.register(Favorite)
 # admin.site.register(ShoppingCart)

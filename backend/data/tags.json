@@ -1,1 +1,14 @@
-[{"name": "Завтрак", "slug": "breakfast", "color": "#00FA9A"}, {"name": "Обед", "slug": "lunch", "color": "#FA8072"}, {"name": "Ужин", "slug": "dinner", "color": "#7B68EE"}]
+[
+    {
+        "id": 0,
+        "name": "обед"
+    },
+    {
+        "id": 1,
+        "name": "бюджетно"
+    },
+    {
+        "id": 2,
+        "name": "много порций"
+    }
+]

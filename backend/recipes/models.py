@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.db.models.signals import pre_delete
+from django.dispatch.dispatcher import receiver
 
 from core.models import CreatedModel
 
@@ -38,9 +40,9 @@ class Ingredient(models.Model):
         blank=True
     )
     image = models.ImageField(
-        upload_to='ingredients/',
+        upload_to='ingredients/images',
         verbose_name='Фото',
-        help_text='Загрузите картинку ингредиента',
+        help_text='Загрузите картинку ингредиента'
     )
     # category = models.CharField(
     #     max_length=1,
@@ -71,9 +73,18 @@ class Tag(models.Model):
 class Category(CreatedModel):
     name = models.CharField(
         max_length=200,
+        unique=True,
         verbose_name='Название',
         help_text='Дайте название категории подборок'
     )
+    description = models.TextField(verbose_name='Описание', blank=True)
+
+    def __str__(self) -> str:
+        return self.name
+
+
+def getDefaultCategory():
+    return Category.objects.get_or_create(name='Другое') #*
 
 
 def getDefaultCategory():
@@ -88,12 +99,19 @@ class Selection(CreatedModel):
     )
     description = models.TextField(
         verbose_name='Описание',
-        help_text='Опишите подборку'
+        help_text='Опишите подборку',
+        blank=True
     )
     cover = models.ImageField(
         upload_to='selections/',
         verbose_name='Картинка',
         help_text='Загрузите обложку для подборки',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='selections',
+        verbose_name='Автор'
     )
     category = models.ForeignKey(
         Category,
@@ -108,9 +126,13 @@ class Selection(CreatedModel):
 class Cuisine(CreatedModel):
     name = models.CharField(
         max_length=200,
+        unique=True,
         verbose_name='Название'
     )
-    description = models.TextField(verbose_name='Описание')
+    description = models.TextField(
+        verbose_name='Описание',
+        blank=True
+    )
     # image
 
     def __str__(self) -> str:
@@ -125,7 +147,8 @@ class Recipe(CreatedModel):
     )
     description = models.TextField(
         verbose_name='Описание',
-        help_text='Опишите блюдо'
+        help_text='Опишите блюдо',
+        blank=True
     )
     servings = models.PositiveSmallIntegerField(
         verbose_name='Кол-во порций',
@@ -135,7 +158,9 @@ class Recipe(CreatedModel):
     )
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
-        help_text=('Укажите время, необходимое для приготовления блюда'),
+        help_text=(
+            'Укажите время, необходимое для приготовления блюда (мин)'
+        ),
         validators=[
             MinValueValidator(MIN_COOKING_TIME),
             MaxValueValidator(MAX_COOKING_TIME)
@@ -147,19 +172,24 @@ class Recipe(CreatedModel):
             'Завершите рецепт пожеланием приятного аппетита '
             'или вашей авторской фразой'
         ),
-        default='Приятного аппетита!'
+        default='Приятного аппетита!',
+        blank=True
     )
     video = models.FileField(
-        upload_to='recipes/',
+        upload_to='recipes/videos',
         verbose_name='Видео приготовления',
-        help_text='Загрузите видео приготовления блюда по этому рецепту'
+        help_text='Загрузите видео приготовления блюда по этому рецепту',
+        blank=True,
+        null=True
     )
     cuisine = models.ForeignKey(
         Cuisine,
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        related_name='recipes'
+        related_name='recipes',
+        verbose_name='Национальная кухня',
+        help_text='Выберите кухню, к которой относится блюдо',
     )
     author = models.ForeignKey(
         User,
@@ -167,14 +197,22 @@ class Recipe(CreatedModel):
         related_name='recipes',
         verbose_name='Автор'
     )
-    tags = models.ManyToManyField(Tag)
+    tags = models.ManyToManyField(
+        Tag,
+        verbose_name='Теги',
+        help_text='Добавьте теги к рецепту',
+    )
     selections = models.ManyToManyField(
         Selection,
-        through='SelectionRecipe'
+        through='SelectionRecipe',
+        verbose_name='Подборки',
+        help_text='Добавьте рецепт в подборку',
     )
     ingredients = models.ManyToManyField(
         Ingredient,
-        through='RecipeIngredient'
+        through='RecipeIngredient',
+        verbose_name='Ингредиенты',
+        help_text='Укажите ингредиенты, используемые в рецепте',
     )
 
     # class Meta:
@@ -191,16 +229,26 @@ class RecipeImage(models.Model):
         related_name='images'
     )
     image = models.ImageField(
-        upload_to='recipes/',
+        upload_to='recipes/images/',
         verbose_name='Фото',
-        help_text='Загрузите картинку готового блюда',
+        help_text='Загрузите картинку готового блюда'
     )
     is_cover = models.BooleanField()
+    # alt text
 
     def __str__(self) -> str:
         if self.is_cover:
-            return f'Обложка {self.id} рецета {self.recipe}'
-        return f'Картинка {self.id} рецета {self.recipe}'
+            return f'Обложка рецепта {self.recipe}'
+        return f'Картинка рецепта {self.recipe}'
+
+
+@receiver(pre_delete, sender=Ingredient)
+@receiver(pre_delete, sender=RecipeImage)
+def recipeimage_delete(sender, instance, **kwargs):
+    try:
+        instance.image.delete(False)
+    except:
+        pass
 
 
 class SelectionRecipe(CreatedModel):
@@ -274,26 +322,25 @@ class RecipeIngredient(models.Model):
 
 
 class Favorite(models.Model):
-    ...
-    # user = models.ForeignKey(
-    #     User,
-    #     on_delete=models.CASCADE,
-    #     related_name='favorited_by'
-    # )
-    # recipe = models.ForeignKey(
-    #     Recipe,
-    #     on_delete=models.CASCADE,
-    #     related_name='favorited'
-    # )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='favorited_by'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='favorited'
+    )
 
-    # class Meta:
-    #     constraints = [
-    #         models.UniqueConstraint(
-    #             fields=['user', 'recipe'], name='unique_favorite')
-    #     ]
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'], name='unique_favorite')
+        ]
 
-    # def __str__(self) -> str:
-    #     return f'Рецепт {self.recipe} в избранном у {self.user}'
+    def __str__(self) -> str:
+        return f'Рецепт {self.recipe} в избранном у {self.user}'
 
 
 class ShoppingCart(models.Model):

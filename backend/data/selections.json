@@ -1,0 +1,18 @@
+[
+    {
+        "id": 0,
+        "title": "Бюджетные рецепты",
+        "description": "",
+        "cover": "",
+        "author": 1,
+        "category": 0
+    },
+    {
+        "id": 1,
+        "title": "Рецепты на хеллоуин",
+        "description": "",
+        "cover": "",
+        "author": 2,
+        "category": 1
+    }
+]

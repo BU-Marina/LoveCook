@@ -1,0 +1,20 @@
+[
+    {
+        "recipe": 0,
+        "ingredient": 0,
+        "measurement_unit": "гр",
+        "amount": 100
+    },
+    {
+        "recipe": 0,
+        "ingredient": 1,
+        "measurement_unit": "шт",
+        "amount": 1
+    },
+    {
+        "recipe": 0,
+        "ingredient": 2,
+        "measurement_unit": "шт",
+        "amount": 2
+    }
+]
