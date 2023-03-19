@@ -87,6 +87,10 @@ def getDefaultCategory():
     return Category.objects.get_or_create(name='Другое') #*
 
 
+def getDefaultCategory():
+    return Category.objects.get_or_create(name='Другое') #*
+
+
 class Selection(CreatedModel):
     title = models.CharField(
         max_length=200,

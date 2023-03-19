@@ -235,23 +235,6 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         return recipe
 
-    # def to_internal_value(self, data):
-    #     # try:
-    #     images = data["images"]
-    #     covers_sum = sum([image["is_cover"] for image in images])
-
-    #     # print(covers_sum)
-    #     if covers_sum > 1:
-    #     #     self.fail('out_of_range')
-
-    #     if not covers_sum:
-    #         images[0]["is_cover"] = 1
-    #         data["images"] = images
-    #     # except:
-    #     #     pass # logs.ERROR
-
-    #     return super().to_internal_value(data)
-
     def validate_images(self, value):
         if not value:
             self.fail('no_value')
