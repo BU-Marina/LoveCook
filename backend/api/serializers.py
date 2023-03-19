@@ -7,8 +7,8 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
                             Favorite, Ingredient, Recipe, RecipeImage,
-                            RecipeIngredient, Selection, ShoppingCart, Tag)
-from users.models import Follow
+                            RecipeIngredient, Selection, Tag)
+# from users.models import Follow
 
 RECIPES_LIMIT_DEFAULT = '6'
 
@@ -111,8 +111,10 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 class CookingTimeSerializer(serializers.Serializer):
     MAX_HOURS = MAX_COOKING_TIME // 60
 
-    hours = serializers.IntegerField(default=0)  # min_value=0, max_value=MAX_HOURS
-    minutes = serializers.IntegerField(default=0)  # min_value=0, max_value=59
+    # min_value=0, max_value=MAX_HOURS
+    hours = serializers.IntegerField(default=0)
+    # min_value=0, max_value=59
+    minutes = serializers.IntegerField(default=0)
 
     default_error_messages = {
         'incorrect_type': (

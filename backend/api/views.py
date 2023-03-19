@@ -1,26 +1,22 @@
 from django.contrib.auth import get_user_model
-from django.http import HttpResponse
+# from django.http import HttpResponse
 
-from django_filters.rest_framework import DjangoFilterBackend
+# from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from rest_framework import filters, status, viewsets
+from rest_framework import status, viewsets  # filters
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny, IsAuthenticated
+# from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
-                            ShoppingCart, Tag)
-from users.models import Follow
+from recipes.models import (Favorite, Recipe)
+# from users.models import Follow
 
-from .filters import IngredientFilter, RecipeFilter
-from .pagination import LimitPagination
-from .permissions import IsAuthorOrReadOnly
-from .serializers import (FavoriteSerializer, IngredientSerializer,
-                          RecipeSerializer, ShoppingCartSerializer,
-                          SubscribeSerializer, SubscriptionsSerializer,
-                          TagSerializer)
+# from .filters import IngredientFilter, RecipeFilter
+# from .pagination import LimitPagination
+# from .permissions import IsAuthorOrReadOnly
+from .serializers import (FavoriteSerializer, RecipeSerializer)
 
 User = get_user_model()
 

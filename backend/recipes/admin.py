@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (Category, Cuisine, Favorite, Ingredient, Recipe,
                      RecipeImage, RecipeIngredient, Selection, SelectionRecipe,
-                     ShoppingCart, Tag)
+                     Tag)
 
 # class RecipeAdmin(admin.ModelAdmin):
 #     list_display = ('title', 'images')
