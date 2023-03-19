@@ -8,6 +8,7 @@ from rest_framework.validators import UniqueTogetherValidator
 from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
                             Favorite, Ingredient, Recipe, RecipeImage,
                             RecipeIngredient, Selection, Tag)
+
 # from users.models import Follow
 
 RECIPES_LIMIT_DEFAULT = '6'
