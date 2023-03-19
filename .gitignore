@@ -136,3 +136,6 @@ migrations/
 
 # media files
 media/
+
+# local setup files
+.setup.cfg
