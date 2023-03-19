@@ -83,12 +83,8 @@ class Category(CreatedModel):
         return self.name
 
 
-def getDefaultCategory():
-    return Category.objects.get_or_create(name='Другое') #*
-
-
-def getDefaultCategory():
-    return Category.objects.get_or_create(name='Другое') #*
+def get_default_category():
+    return Category.objects.get_or_create(name='Другое')
 
 
 class Selection(CreatedModel):
@@ -116,7 +112,7 @@ class Selection(CreatedModel):
     category = models.ForeignKey(
         Category,
         related_name='selections',
-        on_delete=models.SET(getDefaultCategory)
+        on_delete=models.SET(get_default_category)
     )
 
     def __str__(self) -> str:
@@ -247,7 +243,7 @@ class RecipeImage(models.Model):
 def recipeimage_delete(sender, instance, **kwargs):
     try:
         instance.image.delete(False)
-    except:
+    except Exception:
         pass
 
 

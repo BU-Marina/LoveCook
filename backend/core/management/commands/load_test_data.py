@@ -16,19 +16,20 @@ from recipes.models import (Category, Cuisine, Favorite, Ingredient, Recipe,
 
 User = get_user_model()
 
-ALREDY_LOADED_ERROR_MESSAGE = """Если вам нужно загрузить новые данные вместо 
+ALREDY_LOADED_ERROR_MESSAGE = """Если вам нужно загрузить новые данные вместо
 уже загруженных, удалите db.sqlite3, чтобы снести бд.
 Затем выполните миграции для создания пустой бд,
 готовой к загрузке данных.
 """
 
+
 def image64_decode(imagebase64, *args):
     if not imagebase64:
         return imagebase64
     format, imgstr = imagebase64.split(';base64,')
-    ext = format.split('/')[-1]  
-    data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-    return data
+    ext = format.split('/')[-1]
+    return ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+
 
 def get_instance(pk, entity):
     return entity[0].objects.get(pk=pk)
@@ -82,7 +83,7 @@ class Command(BaseCommand):
 
     def data_already_loaded(self, entity):
         if entity.objects.exists():
-            print(f'{entity.__name__}: Объекты уже загружены...завершение.') # может поменять на логи?
+            print(f'{entity.__name__}: Объекты уже загружены...завершение.')
             print(ALREDY_LOADED_ERROR_MESSAGE)
             return True
         return False
@@ -98,8 +99,9 @@ class Command(BaseCommand):
                 objs.append(obj_data)
         except Exception as e:
             print(
-                f'{entity.__name__}: Во время преобразования поля {field_name} '
-                f'произошла ошибка: {e} \n Данные не преобразованы.'
+                f'{entity.__name__}: Во время преобразования поля '
+                f'{field_name} произошла ошибка: {e} \n '
+                f'Данные не преобразованы.'
             )
         return objs
 
@@ -116,7 +118,7 @@ class Command(BaseCommand):
         with open(path, 'r', encoding="utf-8") as data:
             loaded_data = json.load(data)
 
-            objs=loaded_data
+            objs = loaded_data
 
             if entity in self.to_convert:
                 for field_name, func_info in self.to_convert[entity].items():
@@ -127,18 +129,20 @@ class Command(BaseCommand):
             if not objs:
                 print('Данные не загружены.\n')
                 return
-            
+
             if entity in self.to_set:
                 field_name = self.to_set[entity]
                 for obj in objs:
-                    values = obj.pop(field_name) # try except
+                    values = obj.pop(field_name)  # try except
                     instance = entity.objects.create(**obj)
                     getattr(instance, field_name).set(values)
 
             else:
                 entity.objects.bulk_create([entity(**obj) for obj in objs])
 
-            print(f'{entity.__name__}: Данные из файла {file_name} загружены.\n')
+            print(
+                f'{entity.__name__}: Данные из файла {file_name} загружены.\n'
+            )
 
     def handle(self, *args, **options):
         for entity, file_name in self.file_names.items():

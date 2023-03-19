@@ -29,7 +29,8 @@ class RecipeFilter(FilterSet):
     #     user = self.request.user
     #     if user.is_anonymous:
     #         raise NotAuthenticated(
-    #             'Войдите или зарегистрируйтесь, чтобы просматривать избранное.'
+    #             'Войдите или зарегистрируйтесь, '
+    #             'чтобы просматривать избранное.'
     #         )
     #     if value:
     #         return queryset.filter(favorited__user=user)

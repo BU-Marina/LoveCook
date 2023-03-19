@@ -1,5 +1,3 @@
-from functools import reduce
-
 from django.contrib.auth import get_user_model
 
 from djoser.serializers import UserCreateSerializer
@@ -16,8 +14,10 @@ RECIPES_LIMIT_DEFAULT = '6'
 
 User = get_user_model()
 
+
 def to_minutes(hours: int, minutes: int) -> int:
     return hours*60 + minutes
+
 
 def from_minutes(minutes: int) -> dict[int, int]:
     hours = minutes // 60
@@ -111,8 +111,8 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 class CookingTimeSerializer(serializers.Serializer):
     MAX_HOURS = MAX_COOKING_TIME // 60
 
-    hours = serializers.IntegerField(default=0) # min_value=0, max_value=MAX_HOURS
-    minutes = serializers.IntegerField(default=0) # min_value=0, max_value=59
+    hours = serializers.IntegerField(default=0)  # min_value=0, max_value=MAX_HOURS
+    minutes = serializers.IntegerField(default=0)  # min_value=0, max_value=59
 
     default_error_messages = {
         'incorrect_type': (
@@ -192,7 +192,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         slug_field='name', queryset=Cuisine.objects.all()
     )
     cooking_time = CookingTimeSerializer()
-    video = Base64FileField(read_only=False, required=False) # video, images validate
+    video = Base64FileField(read_only=False, required=False)
     images = ImageSerializer(many=True, read_only=False)
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
@@ -403,8 +403,12 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
     ...
-#     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-#     recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+    # user = serializers.PrimaryKeyRelatedField(
+    #     queryset=User.objects.all()
+    # )
+    # recipe = serializers.PrimaryKeyRelatedField(
+    #     queryset=Recipe.objects.all()
+    # )
 
 #     class Meta:
 #         model = ShoppingCart

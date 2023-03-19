@@ -7,10 +7,10 @@ from .models import (Category, Cuisine, Favorite, Ingredient, Recipe,
 # class RecipeAdmin(admin.ModelAdmin):
 #     list_display = ('title', 'images')
 #     list_filter = ('title', 'author', 'tags')
-    # readonly_fields = ('favorited_by',)
+#     readonly_fields = ('favorited_by',)
 
-    # def favorited_by(self, obj):
-    #     return obj.favorited.count()
+#     def favorited_by(self, obj):
+#         return obj.favorited.count()
 
 
 # class IngredientAdmin(admin.ModelAdmin):

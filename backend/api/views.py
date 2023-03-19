@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Sum
 from django.http import HttpResponse
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -66,7 +65,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #     serializer.save(author=self.request.user)
 
     def user_recipe_relation(self, request, pk, **kwargs):
-        user = self.request.user # replace with CurrentuserDefault in serializer
+        user = self.request.user  # replace by CurrentuserDefault |serializers
         model = kwargs.get('model')
         error_message = kwargs.get('error_message')
         print('!')
