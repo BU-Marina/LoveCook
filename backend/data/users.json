@@ -1,9 +1,24 @@
 [
     {
+        "id": 0,
         "username": "admin",
         "email": "admin@gmail.com",
         "password": "123",
         "is_staff": 1,
         "is_superuser": 1
+    },
+    {
+        "id": 1,
+        "username": "user1",
+        "email": "user1@gmail.com",
+        "password": "123",
+        "is_staff": 0
+    },
+    {
+        "id": 2,
+        "username": "user2",
+        "email": "user2@gmail.com",
+        "password": "123",
+        "is_staff": 0
     }
 ]

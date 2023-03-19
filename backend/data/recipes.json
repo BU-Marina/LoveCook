@@ -1,0 +1,16 @@
+[
+    {
+        "id": 0,
+        "title": "Овощной салат",
+        "description": "",
+        "cooking_time": 15,
+        "author": 1,
+        "video": "",
+        "servings": 2,
+        "cuisine": null,
+        "tags": [
+            0,
+            1
+        ]
+    }
+]
