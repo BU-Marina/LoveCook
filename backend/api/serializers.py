@@ -6,8 +6,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
-                            Favorite, Ingredient, Recipe, RecipeImage,
-                            RecipeIngredient, Selection, Tag)
+                            Favorite, Recipe, RecipeImage, Selection,
+                            RecipeIngredient, Tag)
 
 # from users.models import Follow
 
@@ -32,16 +32,11 @@ def from_minutes(minutes: int) -> dict[int, int]:
 
 
 def try_pop_item(data, item_key, many=True):
-    if many:
-        try:
-            items = data.pop(item_key)
-            return items
-        except KeyError:
-            return []
     try:
-        item = data.pop(item_key)
-        return item
+        return data.pop(item_key)
     except KeyError:
+        if many:
+            return []
         return
 
 

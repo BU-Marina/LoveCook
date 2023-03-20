@@ -248,9 +248,9 @@ class RecipeImage(models.Model):
 def recipeimage_delete(sender, instance, **kwargs):
     try:
         instance.image.delete(False)
-    except AttributeError as e:
+    except AttributeError:
         instance.cover.delete(False)
-    except Exception as e:
+    except Exception:
         pass
 
 

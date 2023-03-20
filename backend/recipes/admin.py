@@ -4,6 +4,7 @@ from .models import (Category, Cuisine, Favorite, Ingredient, Recipe,
                      RecipeImage, RecipeIngredient, Selection, SelectionRecipe,
                      Tag)
 
+
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('title', 'created')
     list_filter = ('title', 'author', 'tags')
