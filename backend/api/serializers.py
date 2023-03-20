@@ -127,7 +127,9 @@ class CookingTimeSerializer(serializers.Serializer):
             'Передан некорректный тип данных в {item}. '
             'Ожидалось целое число, но была получена строка {input_type}.'
         ),
-        'out_of_range': '{item} вне диапазона. Должно быть между {min} и {max}.'
+        'out_of_range': (
+            '{item} вне диапазона. Должно быть между {min} и {max}.'
+        )
     }
 
     def to_internal_value(self, data):
