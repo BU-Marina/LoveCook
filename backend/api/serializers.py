@@ -6,8 +6,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
-                            Favorite, Recipe, RecipeImage, Selection,
-                            RecipeIngredient, Tag)
+                            Favorite, Recipe, RecipeImage, RecipeIngredient,
+                            Selection, Tag)
 
 # from users.models import Follow
 
@@ -37,7 +37,6 @@ def try_pop_item(data, item_key, many=True):
     except KeyError:
         if many:
             return []
-        return
 
 
 class IngredientSerializer(serializers.ModelSerializer):
