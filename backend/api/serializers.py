@@ -13,6 +13,7 @@ from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
 
 RECIPES_LIMIT_DEFAULT = '6'
 MAX_HOURS = MAX_COOKING_TIME // 60
+MAX_TAGS_AMOUNT = 10
 
 User = get_user_model()
 
@@ -25,9 +26,23 @@ def from_minutes(minutes: int) -> dict[int, int]:
     hours = minutes // 60
     mins = minutes % 60
     return {
-        "hours": hours,
-        "minutes": mins
+        'hours': hours,
+        'minutes': mins
     }
+
+
+def try_pop_item(data, item_key, many=True):
+    if many:
+        try:
+            items = data.pop(item_key)
+            return items
+        except KeyError:
+            return []
+    try:
+        item = data.pop(item_key)
+        return item
+    except KeyError:
+        return
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -100,16 +115,6 @@ class RecipeRepresentationSerializer(serializers.ModelSerializer):
 #         )
 
 
-class RecipeIngredientSerializer(serializers.ModelSerializer):
-    ingredient = serializers.PrimaryKeyRelatedField(
-        many=False, queryset=Ingredient.objects.all()
-    )
-
-    class Meta:
-        model = RecipeIngredient
-        fields = ('ingredient', 'measurement_unit', 'amount')
-
-
 class CookingTimeSerializer(serializers.Serializer):
     hours = serializers.IntegerField(
         default=0,
@@ -133,7 +138,7 @@ class CookingTimeSerializer(serializers.Serializer):
     }
 
     def to_internal_value(self, data):
-        hours, minutes = data.get("hours"), data.get("minutes")
+        hours, minutes = data.get('hours'), data.get('minutes')
         if not isinstance(hours, int):
             self.fail(
                 'incorrect_type',
@@ -185,15 +190,32 @@ class ImageSerializer(serializers.ModelSerializer):
         )
 
 
+class RecipeIngredientSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ('ingredient', 'measurement_unit', 'amount')
+
+
+class SlugCreatedField(serializers.SlugRelatedField):
+    def to_internal_value(self, data):
+        queryset = self.get_queryset()
+        try:
+            value, _ = queryset.get_or_create(**{self.slug_field: data})
+            return value
+        except (TypeError, ValueError):
+            self.fail('invalid')
+
+
 class RecipeSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientSerializer(
-        many=True, read_only=False, required=False,
+        many=True, read_only=False, required=True, source='recipe_ingredients'
     )
     selections = serializers.PrimaryKeyRelatedField(
         many=True, read_only=False, required=False,
         queryset=Selection.objects.all()
     )
-    tags = serializers.SlugRelatedField(
+    tags = SlugCreatedField(
         many=True, read_only=False, required=False,
         slug_field='name', queryset=Tag.objects.all()
     )
@@ -207,14 +229,15 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     default_error_messages = {
-        'out_of_range': (
+        'covers_out_of_range': (
             'Неправильное кол-во обложек. '
             'У рецепта должна быть одна обложка.'
         ),
-        'no_value': (
-            'Не было передано ни одного изображения, '
+        'no_data': (
+            'Не было передано ни одного {name}, '
             'должно быть мин 1.'
-        )
+        ),
+        'too_many': 'Слишком много {name} (макс {max}).',
     }
 
     class Meta:
@@ -225,69 +248,51 @@ class RecipeSerializer(serializers.ModelSerializer):
             'selections', 'ingredients', 'author'
         )
 
+    def set_recipe_relation(self, recipe, objs_data, model) -> None:
+        objs = [model(
+            recipe=recipe,
+            **data
+        ) for data in objs_data]
+
+        model.objects.bulk_create(objs)
+
     def create(self, validated_data):
+        ingredients = validated_data.pop('recipe_ingredients')
         images = validated_data.pop('images')
+        tags = try_pop_item(validated_data, 'tags')
+        selections = try_pop_item(validated_data, 'selections')
 
         recipe = Recipe.objects.create(**validated_data)
+        recipe.tags.set(tags)
+        recipe.selections.set(selections)
 
-        objs = [RecipeImage(
-            recipe=recipe,
-            image=image.get("image"),
-            is_cover=image.get("is_cover")
-        ) for image in images]
-
-        RecipeImage.objects.bulk_create(objs)
+        self.set_recipe_relation(recipe, ingredients, RecipeIngredient)
+        self.set_recipe_relation(recipe, images, RecipeImage)
 
         return recipe
 
-    def validate_images(self, value):
-        if not value:
-            self.fail('no_value')
+    def validate_images(self, data):
+        if not data:
+            self.fail('no_data', name='изображения')
 
-        covers_sum = sum([image.get("is_cover") for image in value])
+        covers_sum = sum([image.get('is_cover') for image in data])
 
         if covers_sum != 1:
-            self.fail('out_of_range')
+            self.fail('covers_out_of_range')
 
-        return value
+        return data
 
-    # def validate(self, data):
-        # if not data['recipe_ingredients']:
-        #     raise serializers.ValidationError("Список ингредиентов пустой.")
+    def validate_tags(self, data):
+        if len(data) > 10:
+            self.fail('too_many', name='тегов', max=MAX_TAGS_AMOUNT)
 
-        # if not data['tags']:
-        #     raise serializers.ValidationError("Список тегов пустой.")
+        return data
 
-        # if len(data['tags']) != len(set(data['tags'])):
-        #     raise serializers.ValidationError("Теги повторяются.")
+    def validate_ingredients(self, data):
+        if not data:
+            self.fail('no_data', name='ингредиента')
 
-        # ingredints = [
-        #     data['ingredient']['id'] for data in data['recipe_ingredients']
-        # ]
-        # if len(ingredints) != len(set(ingredints)):
-        #     raise serializers.ValidationError("Ингредиенты повторяются.")
-
-        # return data
-
-    # def set_ingredients(self, recipe, ingredients):
-    #     objs = [RecipeIngredient(
-    #         recipe=recipe,
-    #         ingredient=data['ingredient']['id'],
-    #         amount=int(data['amount'])
-    #     ) for data in ingredients]
-
-    #     return RecipeIngredient.objects.bulk_create(objs)
-
-    # def create(self, validated_data):
-    #     ingredients_data = validated_data.pop('recipe_ingredients')
-    #     tags = validated_data.pop('tags')
-
-    #     recipe = Recipe.objects.create(**validated_data)
-
-    #     self.set_ingredients(recipe, ingredients_data)
-    #     recipe.tags.set(tags)
-
-    #     return recipe
+        return data
 
     # def update(self, instance, validated_data):
     #     if 'recipe_ingredients' in validated_data:
