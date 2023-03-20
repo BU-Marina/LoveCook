@@ -65,23 +65,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #     serializer.save(author=self.request.user)
 
     def user_recipe_relation(self, request, pk, **kwargs):
-        user = self.request.user  # replace by CurrentuserDefault |serializers
         model = kwargs.get('model')
         error_message = kwargs.get('error_message')
-        print('!')
 
         if request.method == 'POST':
             serializer = self.get_serializer(data={
-                'user': user.id,
                 'recipe': pk
             })
-            # serializer = self.get_serializer(data=request.data)
-            # print(serializer.initial_data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
+            user = self.request.user
             recipe = get_object_or_404(Recipe, id=pk)
 
             try:

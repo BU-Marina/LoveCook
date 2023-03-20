@@ -83,7 +83,7 @@ class Category(CreatedModel):
         return self.name
 
 
-def get_default_category():
+def get_default_category() -> Category:
     return Category.objects.get_or_create(name='Другое')
 
 

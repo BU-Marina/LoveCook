@@ -12,6 +12,7 @@ from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
 # from users.models import Follow
 
 RECIPES_LIMIT_DEFAULT = '6'
+MAX_HOURS = MAX_COOKING_TIME // 60
 
 User = get_user_model()
 
@@ -110,19 +111,23 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 class CookingTimeSerializer(serializers.Serializer):
-    MAX_HOURS = MAX_COOKING_TIME // 60
-
-    # min_value=0, max_value=MAX_HOURS
-    hours = serializers.IntegerField(default=0)
-    # min_value=0, max_value=59
-    minutes = serializers.IntegerField(default=0)
+    hours = serializers.IntegerField(
+        default=0,
+        min_value=0,
+        max_value=MAX_HOURS
+    )
+    minutes = serializers.IntegerField(
+        default=0,
+        min_value=0,
+        max_value=59
+    )
 
     default_error_messages = {
         'incorrect_type': (
-            'Incorrect type for {item}. '
-            'Expected an int, but got {input_type}'
+            'Передан некорректный тип данных в {item}. '
+            'Ожидалось целое число, но была получена строка {input_type}.'
         ),
-        'out_of_range': '{item} out of range. Must be between {min} and {max}.'
+        'out_of_range': '{item} вне диапазона. Должно быть между {min} и {max}.'
     }
 
     def to_internal_value(self, data):
@@ -141,12 +146,12 @@ class CookingTimeSerializer(serializers.Serializer):
                 input_type=type(minutes).__name__
             )
 
-        if not (0 <= hours <= self.MAX_HOURS):
+        if not (0 <= hours <= MAX_HOURS):
             self.fail(
                 'out_of_range',
                 item='Minutes',
                 min=0,
-                max=self.MAX_HOURS
+                max=MAX_HOURS
             )
 
         if not (0 <= minutes <= 59):
@@ -158,8 +163,8 @@ class CookingTimeSerializer(serializers.Serializer):
             self.fail(
                 'out_of_range',
                 item='Cooking_time',
-                min=MIN_COOKING_TIME,
-                max=MAX_COOKING_TIME
+                min=str(MIN_COOKING_TIME) + ' мин',
+                max=str(MAX_HOURS) + ' ч'
             )
 
         return value
@@ -200,8 +205,14 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     default_error_messages = {
-        'out_of_range': 'Covers amount out of range. Must be only one.',
-        'no_value': 'No images was recieved. Must be at least one.'
+        'out_of_range': (
+            'Неправильное кол-во обложек. '
+            'У рецепта должна быть одна обложка.'
+        ),
+        'no_value': (
+            'Не было передано ни одного изображения, '
+            'должно быть мин 1.'
+        )
     }
 
     class Meta:
@@ -311,7 +322,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
             UniqueTogetherValidator(
                 queryset=Favorite.objects.all(),
                 fields=('user', 'recipe'),
-                message='Вы уже добавили этот рецепт в избранное'
+                message='Вы уже добавили этот рецепт в избранное.'
             )
         ]
 
