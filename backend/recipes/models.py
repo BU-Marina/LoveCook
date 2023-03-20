@@ -11,6 +11,7 @@ MAX_COOKING_TIME = 600
 MIN_INGREDIENTS_AMOUNT = 0.1
 MIN_SERVINGS = 1
 MAX_SERVINGS = 10
+DEFAULT_CATEGORY_NAME = 'Другое'
 
 User = get_user_model()
 
@@ -85,7 +86,7 @@ class Category(CreatedModel):
 
 
 def get_default_category() -> Category:
-    return Category.objects.get_or_create(name='Другое')
+    return Category.objects.get_or_create(name=DEFAULT_CATEGORY_NAME)
 
 
 class Selection(CreatedModel):
@@ -102,7 +103,7 @@ class Selection(CreatedModel):
     cover = models.ImageField(
         upload_to='selections/',
         verbose_name='Картинка',
-        help_text='Загрузите обложку для подборки',
+        help_text='Загрузите обложку для подборки'
     )
     author = models.ForeignKey(
         User,
@@ -189,7 +190,7 @@ class Recipe(CreatedModel):
         null=True,
         related_name='recipes',
         verbose_name='Национальная кухня',
-        help_text='Выберите кухню, к которой относится блюдо',
+        help_text='Выберите кухню, к которой относится блюдо'
     )
     author = models.ForeignKey(
         User,
@@ -200,19 +201,19 @@ class Recipe(CreatedModel):
     tags = models.ManyToManyField(
         Tag,
         verbose_name='Теги',
-        help_text='Добавьте теги к рецепту',
+        help_text='Добавьте теги к рецепту'
     )
     selections = models.ManyToManyField(
         Selection,
         through='SelectionRecipe',
         verbose_name='Подборки',
-        help_text='Добавьте рецепт в подборку',
+        help_text='Добавьте рецепт в подборку'
     )
     ingredients = models.ManyToManyField(
         Ingredient,
         through='RecipeIngredient',
         verbose_name='Ингредиенты',
-        help_text='Укажите ингредиенты, используемые в рецепте',
+        help_text='Укажите ингредиенты, используемые в рецепте'
     )
 
     # class Meta:
@@ -234,7 +235,6 @@ class RecipeImage(models.Model):
         help_text='Загрузите картинку готового блюда'
     )
     is_cover = models.BooleanField()
-    # alt text
 
     def __str__(self) -> str:
         if self.is_cover:
@@ -242,12 +242,15 @@ class RecipeImage(models.Model):
         return f'Картинка рецепта {self.recipe}'
 
 
+@receiver(pre_delete, sender=Selection)
 @receiver(pre_delete, sender=Ingredient)
 @receiver(pre_delete, sender=RecipeImage)
 def recipeimage_delete(sender, instance, **kwargs):
     try:
         instance.image.delete(False)
-    except Exception:
+    except AttributeError as e:
+        instance.cover.delete(False)
+    except Exception as e:
         pass
 
 
@@ -275,7 +278,7 @@ class SelectionRecipe(CreatedModel):
 
 class RecipeIngredient(models.Model):
     MEASUREMENT_UNITS = [
-        ('гр', 'гр'),
+        ('г', 'г'),
         ('кг', 'кг'),
         ('л', 'литр'),
         ('мл', 'мл'),
@@ -289,9 +292,11 @@ class RecipeIngredient(models.Model):
         ('п', 'пинта'),
         ('пв', 'по вкусу'),
     ]
+
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='recipe_ingredients'
     )
     ingredient = models.ForeignKey(
         Ingredient,
