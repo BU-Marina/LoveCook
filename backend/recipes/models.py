@@ -10,6 +10,7 @@ MIN_COOKING_TIME = 5
 MAX_COOKING_TIME = 600
 MIN_INGREDIENTS_AMOUNT = 0.1
 MIN_SERVINGS = 1
+MAX_SERVINGS = 10
 
 User = get_user_model()
 
@@ -150,7 +151,10 @@ class Recipe(CreatedModel):
         verbose_name='Кол-во порций',
         help_text='Укажите кол-во порций',
         default=MIN_SERVINGS,
-        validators=[MinValueValidator(MIN_SERVINGS)]
+        validators=[
+            MinValueValidator(MIN_SERVINGS),
+            MaxValueValidator(MAX_SERVINGS)
+        ]
     )
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
