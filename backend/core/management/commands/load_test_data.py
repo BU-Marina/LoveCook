@@ -37,7 +37,7 @@ def get_instance(pk, model):
 
 class Command(BaseCommand):
     help = 'Загружает тестовые данные из json файла'
-    data_path = os.path.join(BASE_DIR, 'data')
+    data_path = os.path.join(BASE_DIR, 'data/tests')
     file_names = {
         Ingredient: 'ingredients.json',
         User: 'users.json',
