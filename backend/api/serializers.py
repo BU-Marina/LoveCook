@@ -14,6 +14,7 @@ from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
 RECIPES_LIMIT_DEFAULT = '6'
 MAX_HOURS = MAX_COOKING_TIME // 60
 MAX_TAGS_AMOUNT = 10
+MAX_IMAGES_AMOUNT = 10
 
 User = get_user_model()
 
@@ -129,6 +130,7 @@ class ImageSerializer(serializers.ModelSerializer):
         fields = (
             'image', 'is_cover'
         )
+        extra_kwargs = {'is_cover': {'required': False, 'default': 0}}
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
@@ -229,6 +231,9 @@ class RecipeSerializer(serializers.ModelSerializer):
     def validate_images(self, data):
         if not data:
             self.fail('no_data', name='изображения')
+
+        if len(data) > MAX_IMAGES_AMOUNT:
+            self.fail('too_many', name='картинок', max=MAX_IMAGES_AMOUNT)
 
         covers_sum = sum([image.get('is_cover') for image in data])
 
