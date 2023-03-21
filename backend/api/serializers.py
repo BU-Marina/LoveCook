@@ -113,54 +113,9 @@ class CookingTimeSerializer(serializers.Serializer):
         max_value=59
     )
 
-    default_error_messages = {
-        'incorrect_type': (
-            'Передан некорректный тип данных в {item}. '
-            'Ожидалось целое число, но была получена строка {input_type}.'
-        ),
-        'out_of_range': (
-            '{item} вне диапазона. Должно быть между {min} и {max}.'
-        )
-    }
-
-    def to_internal_value(self, data):
-        hours, minutes = data.get('hours'), data.get('minutes')
-        if not isinstance(hours, int):
-            self.fail(
-                'incorrect_type',
-                item='hours',
-                input_type=type(hours).__name__
-            )
-
-        if not isinstance(minutes, int):
-            self.fail(
-                'incorrect_type',
-                item='minutes',
-                input_type=type(minutes).__name__
-            )
-
-        if not (0 <= hours <= MAX_HOURS):
-            self.fail(
-                'out_of_range',
-                item='Minutes',
-                min=0,
-                max=MAX_HOURS
-            )
-
-        if not (0 <= minutes <= 59):
-            self.fail('out_of_range', item='Minutes', min=0, max=59)
-
-        value = to_minutes(hours, minutes)
-
-        if not (MIN_COOKING_TIME <= value <= MAX_COOKING_TIME):
-            self.fail(
-                'out_of_range',
-                item='Cooking_time',
-                min=str(MIN_COOKING_TIME) + ' мин',
-                max=str(MAX_HOURS) + ' ч'
-            )
-
-        return value
+    def validate(self, attrs):
+        super().validate(attrs)
+        return to_minutes(**attrs)
 
     def to_representation(self, value):
         return from_minutes(value)
@@ -219,6 +174,9 @@ class RecipeSerializer(serializers.ModelSerializer):
             'Неправильное кол-во обложек. '
             'У рецепта должна быть одна обложка.'
         ),
+        'out_of_range': (
+            '{item} вне диапазона. Должно быть между {min} и {max}.'
+        ),
         'no_data': (
             'Не было передано ни одного {name}, '
             'должно быть мин 1.'
@@ -256,6 +214,17 @@ class RecipeSerializer(serializers.ModelSerializer):
         self.set_recipe_relation(recipe, images, RecipeImage)
 
         return recipe
+
+    def validate_cooking_time(self, value):
+        if not (MIN_COOKING_TIME <= value <= MAX_COOKING_TIME):
+            self.fail(
+                'out_of_range',
+                item='Cooking_time',
+                min=str(MIN_COOKING_TIME) + ' мин',
+                max=str(MAX_HOURS) + ' ч'
+            )
+
+        return value
 
     def validate_images(self, data):
         if not data:
