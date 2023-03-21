@@ -31,14 +31,6 @@ def from_minutes(minutes: int) -> dict[int, int]:
     }
 
 
-def try_pop_item(data, item_key, many=True):
-    try:
-        return data.pop(item_key)
-    except KeyError:
-        if many:
-            return []
-
-
 class IngredientSerializer(serializers.ModelSerializer):
     ...
 
@@ -253,8 +245,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         ingredients = validated_data.pop('recipe_ingredients')
         images = validated_data.pop('images')
-        tags = try_pop_item(validated_data, 'tags')
-        selections = try_pop_item(validated_data, 'selections')
+        tags = validated_data.pop('tags', [])
+        selections = validated_data.pop('selections', [])
 
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
