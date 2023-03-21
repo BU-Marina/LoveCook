@@ -13,7 +13,7 @@ from recipes.models import Favorite, Recipe
 
 # from .filters import IngredientFilter, RecipeFilter
 # from .pagination import LimitPagination
-# from .permissions import IsAuthorOrReadOnly
+from .permissions import IsAuthorOrReadOnly
 from .serializers import FavoriteSerializer, RecipeSerializer
 
 # from django.http import HttpResponse
@@ -28,9 +28,9 @@ User = get_user_model()
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
-    # permission_classes = [
-    #     IsAuthorOrReadOnly,
-    # ]
+    permission_classes = [
+        IsAuthorOrReadOnly,
+    ]
     # pagination_class = LimitPagination
     # filter_backends = [
     #     filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend
