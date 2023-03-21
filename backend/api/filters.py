@@ -1,10 +1,10 @@
 from django.contrib.auth import get_user_model
 
-from rest_framework.exceptions import NotAuthenticated
+from django_filters.rest_framework import FilterSet  # filters
 
-from django_filters.rest_framework import FilterSet, filters
+# from rest_framework.exceptions import NotAuthenticated
 
-from recipes.models import Ingredient, Recipe, Tag
+# from recipes.models import Ingredient, Recipe, Tag
 
 User = get_user_model()
 
@@ -30,7 +30,8 @@ class RecipeFilter(FilterSet):
     #     user = self.request.user
     #     if user.is_anonymous:
     #         raise NotAuthenticated(
-    #             'Войдите или зарегистрируйтесь, чтобы просматривать избранное.'
+    #             'Войдите или зарегистрируйтесь, '
+    #             'чтобы просматривать избранное.'
     #         )
     #     if value:
     #         return queryset.filter(favorited__user=user)

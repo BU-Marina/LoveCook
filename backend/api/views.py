@@ -1,39 +1,26 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Sum
-from django.http import HttpResponse
 
-from rest_framework import filters, status, viewsets
+# from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet
+from rest_framework import status, viewsets  # filters
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny, IsAuthenticated
+# from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
+from recipes.models import Favorite, Recipe
 
-from recipes.models import (
-    Favorite,
-    Ingredient,
-    Recipe,
-    RecipeIngredient,
-    ShoppingCart,
-    Tag
-)
-from users.models import Follow
-
-from .filters import IngredientFilter, RecipeFilter
-from .pagination import LimitPagination
+# from .filters import IngredientFilter, RecipeFilter
+# from .pagination import LimitPagination
 from .permissions import IsAuthorOrReadOnly
-from .serializers import (
-    FavoriteSerializer,
-    IngredientSerializer,
-    RecipeSerializer,
-    ShoppingCartSerializer,
-    SubscribeSerializer,
-    SubscriptionsSerializer,
-    TagSerializer
-)
+from .serializers import FavoriteSerializer, RecipeSerializer
+
+# from django.http import HttpResponse
+
+
+# from users.models import Follow
+
 
 User = get_user_model()
 
@@ -41,9 +28,9 @@ User = get_user_model()
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
-    # permission_classes = [
-    #     IsAuthorOrReadOnly,
-    # ]
+    permission_classes = [
+        IsAuthorOrReadOnly,
+    ]
     # pagination_class = LimitPagination
     # filter_backends = [
     #     filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend
@@ -78,23 +65,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #     serializer.save(author=self.request.user)
 
     def user_recipe_relation(self, request, pk, **kwargs):
-        user = self.request.user # replace with CurrentuserDefault in serializer
         model = kwargs.get('model')
         error_message = kwargs.get('error_message')
-        print('!')
 
         if request.method == 'POST':
             serializer = self.get_serializer(data={
-                'user': user.id,
                 'recipe': pk
             })
-            # serializer = self.get_serializer(data=request.data)
-            # print(serializer.initial_data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
+            user = self.request.user
             recipe = get_object_or_404(Recipe, id=pk)
 
             try:

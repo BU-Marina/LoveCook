@@ -1,41 +1,34 @@
-from functools import reduce
-
 from django.contrib.auth import get_user_model
 
+from djoser.serializers import UserCreateSerializer
+from drf_extra_fields.fields import Base64FileField, Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from djoser.serializers import UserCreateSerializer
-from drf_extra_fields.fields import Base64ImageField, Base64FileField
+from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
+                            Favorite, Recipe, RecipeImage, RecipeIngredient,
+                            Selection, Tag)
 
-from recipes.models import (
-    Favorite,
-    Ingredient,
-    Recipe,
-    RecipeImage,
-    Cuisine,
-    RecipeIngredient,
-    Selection,
-    ShoppingCart,
-    Tag,
-    MIN_COOKING_TIME,
-    MAX_COOKING_TIME
-)
-from users.models import Follow
+# from users.models import Follow
 
 RECIPES_LIMIT_DEFAULT = '6'
+MAX_HOURS = MAX_COOKING_TIME // 60
+MAX_TAGS_AMOUNT = 10
+MAX_IMAGES_AMOUNT = 10
 
 User = get_user_model()
 
+
 def to_minutes(hours: int, minutes: int) -> int:
     return hours*60 + minutes
+
 
 def from_minutes(minutes: int) -> dict[int, int]:
     hours = minutes // 60
     mins = minutes % 60
     return {
-        "hours": hours,
-        "minutes": mins
+        'hours': hours,
+        'minutes': mins
     }
 
 
@@ -109,68 +102,21 @@ class RecipeRepresentationSerializer(serializers.ModelSerializer):
 #         )
 
 
-class RecipeIngredientSerializer(serializers.ModelSerializer):
-    ingredient = serializers.PrimaryKeyRelatedField(
-        many=False, queryset=Ingredient.objects.all()
+class CookingTimeSerializer(serializers.Serializer):
+    hours = serializers.IntegerField(
+        default=0,
+        min_value=0,
+        max_value=MAX_HOURS
+    )
+    minutes = serializers.IntegerField(
+        default=0,
+        min_value=0,
+        max_value=59
     )
 
-    class Meta:
-        model = RecipeIngredient
-        fields = ('ingredient', 'measurement_unit', 'amount')
-
-
-class CookingTimeSerializer(serializers.Serializer):
-    MAX_HOURS = MAX_COOKING_TIME // 60
-
-    hours = serializers.IntegerField(default=0) # min_value=0, max_value=MAX_HOURS
-    minutes = serializers.IntegerField(default=0) # min_value=0, max_value=59
-
-    default_error_messages = {
-        'incorrect_type': (
-            'Incorrect type for {item}. '
-            'Expected an int, but got {input_type}'
-        ),
-        'out_of_range': '{item} out of range. Must be between {min} and {max}.'
-    }
-
-    def to_internal_value(self, data):
-        hours, minutes = data.get("hours"), data.get("minutes")
-        if not isinstance(hours, int):
-            self.fail(
-                'incorrect_type',
-                item='hours',
-                input_type=type(hours).__name__
-            )
-
-        if not isinstance(minutes, int):
-            self.fail(
-                'incorrect_type',
-                item='minutes',
-                input_type=type(minutes).__name__
-            )
-
-        if not (0 <= hours <= self.MAX_HOURS):
-            self.fail(
-                'out_of_range',
-                item='Minutes',
-                min=0,
-                max=self.MAX_HOURS
-            )
-
-        if not (0 <= minutes <= 59):
-            self.fail('out_of_range', item='Minutes', min=0, max=59)
-
-        value = to_minutes(hours, minutes)
-
-        if not (MIN_COOKING_TIME <= value <= MAX_COOKING_TIME):
-            self.fail(
-                'out_of_range',
-                item='Cooking_time',
-                min=MIN_COOKING_TIME,
-                max=MAX_COOKING_TIME
-            )
-
-        return value
+    def validate(self, attrs):
+        super().validate(attrs)
+        return to_minutes(**attrs)
 
     def to_representation(self, value):
         return from_minutes(value)
@@ -184,17 +130,35 @@ class ImageSerializer(serializers.ModelSerializer):
         fields = (
             'image', 'is_cover'
         )
+        extra_kwargs = {'is_cover': {'required': False, 'default': 0}}
+
+
+class RecipeIngredientSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ('ingredient', 'measurement_unit', 'amount')
+
+
+class SlugCreatedField(serializers.SlugRelatedField):
+    def to_internal_value(self, data):
+        queryset = self.get_queryset()
+        try:
+            value, _ = queryset.get_or_create(**{self.slug_field: data})
+            return value
+        except (TypeError, ValueError):
+            self.fail('invalid')
 
 
 class RecipeSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientSerializer(
-        many=True, read_only=False, required=False,
+        many=True, read_only=False, required=True, source='recipe_ingredients'
     )
     selections = serializers.PrimaryKeyRelatedField(
         many=True, read_only=False, required=False,
         queryset=Selection.objects.all()
     )
-    tags = serializers.SlugRelatedField(
+    tags = SlugCreatedField(
         many=True, read_only=False, required=False,
         slug_field='name', queryset=Tag.objects.all()
     )
@@ -203,13 +167,23 @@ class RecipeSerializer(serializers.ModelSerializer):
         slug_field='name', queryset=Cuisine.objects.all()
     )
     cooking_time = CookingTimeSerializer()
-    video = Base64FileField(read_only=False, required=False) # video, images validate
+    video = Base64FileField(read_only=False, required=False)
     images = ImageSerializer(many=True, read_only=False)
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     default_error_messages = {
-        'out_of_range': 'Covers amount out of range. Must be only one.',
-        'no_value': 'No images was recieved. Must be at least one.'
+        'covers_out_of_range': (
+            'Неправильное кол-во обложек. '
+            'У рецепта должна быть одна обложка.'
+        ),
+        'out_of_range': (
+            '{item} вне диапазона. Должно быть между {min} и {max}.'
+        ),
+        'no_data': (
+            'Не было передано ни одного {name}, '
+            'должно быть мин 1.'
+        ),
+        'too_many': 'Слишком много {name} (макс {max}).',
     }
 
     class Meta:
@@ -220,69 +194,65 @@ class RecipeSerializer(serializers.ModelSerializer):
             'selections', 'ingredients', 'author'
         )
 
+    def set_recipe_relation(self, recipe, objs_data, model) -> None:
+        objs = [model(
+            recipe=recipe,
+            **data
+        ) for data in objs_data]
+
+        model.objects.bulk_create(objs)
+
     def create(self, validated_data):
+        ingredients = validated_data.pop('recipe_ingredients')
         images = validated_data.pop('images')
+        tags = validated_data.pop('tags', [])
+        selections = validated_data.pop('selections', [])
 
         recipe = Recipe.objects.create(**validated_data)
+        recipe.tags.set(tags)
+        recipe.selections.set(selections)
 
-        objs = [RecipeImage(
-            recipe=recipe,
-            image=image.get("image"),
-            is_cover=image.get("is_cover")
-        ) for image in images]
-
-        RecipeImage.objects.bulk_create(objs)
+        self.set_recipe_relation(recipe, ingredients, RecipeIngredient)
+        self.set_recipe_relation(recipe, images, RecipeImage)
 
         return recipe
 
-    def validate_images(self, value):
-        if not value:
-            self.fail('no_value')
-
-        covers_sum = sum([image.get("is_cover") for image in value])
-
-        if covers_sum != 1:
-            self.fail('out_of_range')
+    def validate_cooking_time(self, value):
+        if not (MIN_COOKING_TIME <= value <= MAX_COOKING_TIME):
+            self.fail(
+                'out_of_range',
+                item='Cooking_time',
+                min=str(MIN_COOKING_TIME) + ' мин',
+                max=str(MAX_HOURS) + ' ч'
+            )
 
         return value
 
-    # def validate(self, data):
-        # if not data['recipe_ingredients']:
-        #     raise serializers.ValidationError("Список ингредиентов пустой.")
+    def validate_images(self, data):
+        if not data:
+            self.fail('no_data', name='изображения')
 
-        # if not data['tags']:
-        #     raise serializers.ValidationError("Список тегов пустой.")
+        if len(data) > MAX_IMAGES_AMOUNT:
+            self.fail('too_many', name='картинок', max=MAX_IMAGES_AMOUNT)
 
-        # if len(data['tags']) != len(set(data['tags'])):
-        #     raise serializers.ValidationError("Теги повторяются.")
+        covers_sum = sum([image.get('is_cover') for image in data])
 
-        # ingredints = [
-        #     data['ingredient']['id'] for data in data['recipe_ingredients']
-        # ]
-        # if len(ingredints) != len(set(ingredints)):
-        #     raise serializers.ValidationError("Ингредиенты повторяются.")
+        if covers_sum != 1:
+            self.fail('covers_out_of_range')
 
-        # return data
+        return data
 
-    # def set_ingredients(self, recipe, ingredients):
-    #     objs = [RecipeIngredient(
-    #         recipe=recipe,
-    #         ingredient=data['ingredient']['id'],
-    #         amount=int(data['amount'])
-    #     ) for data in ingredients]
+    def validate_tags(self, data):
+        if len(data) > 10:
+            self.fail('too_many', name='тегов', max=MAX_TAGS_AMOUNT)
 
-    #     return RecipeIngredient.objects.bulk_create(objs)
+        return data
 
-    # def create(self, validated_data):
-    #     ingredients_data = validated_data.pop('recipe_ingredients')
-    #     tags = validated_data.pop('tags')
+    def validate_ingredients(self, data):
+        if not data:
+            self.fail('no_data', name='ингредиента')
 
-    #     recipe = Recipe.objects.create(**validated_data)
-
-    #     self.set_ingredients(recipe, ingredients_data)
-    #     recipe.tags.set(tags)
-
-    #     return recipe
+        return data
 
     # def update(self, instance, validated_data):
     #     if 'recipe_ingredients' in validated_data:
@@ -319,7 +289,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
             UniqueTogetherValidator(
                 queryset=Favorite.objects.all(),
                 fields=('user', 'recipe'),
-                message='Вы уже добавили этот рецепт в избранное'
+                message='Вы уже добавили этот рецепт в избранное.'
             )
         ]
 
@@ -414,8 +384,12 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
     ...
-#     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-#     recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
+    # user = serializers.PrimaryKeyRelatedField(
+    #     queryset=User.objects.all()
+    # )
+    # recipe = serializers.PrimaryKeyRelatedField(
+    #     queryset=Recipe.objects.all()
+    # )
 
 #     class Meta:
 #         model = ShoppingCart
