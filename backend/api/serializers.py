@@ -6,7 +6,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
-                            Favorite, Recipe, RecipeImage, RecipeIngredient,
+                            FavoriteRecipe, Recipe, RecipeImage, RecipeIngredient,
                             Selection, Tag)
 
 # from users.models import Follow
@@ -91,7 +91,7 @@ class RecipeRepresentationSerializer(serializers.ModelSerializer):
 #         user = self.context['request'].user
 #         return (
 #             user.is_authenticated
-#             and Favorite.objects.filter(user=user, recipe=obj).exists()
+#             and FavoriteRecipe.objects.filter(user=user, recipe=obj).exists()
 #         )
 
 #     def get_is_in_shopping_cart(self, obj):
@@ -282,12 +282,12 @@ class FavoriteSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Favorite
+        model = FavoriteRecipe
         fields = ('user', 'recipe')
         read_only_fields = ('user', 'recipe')
         validators = [
             UniqueTogetherValidator(
-                queryset=Favorite.objects.all(),
+                queryset=FavoriteRecipe.objects.all(),
                 fields=('user', 'recipe'),
                 message='Вы уже добавили этот рецепт в избранное.'
             )

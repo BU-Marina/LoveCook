@@ -9,7 +9,7 @@ from rest_framework.generics import get_object_or_404
 # from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from recipes.models import Favorite, Recipe
+from recipes.models import FavoriteRecipe, Recipe
 
 # from .filters import IngredientFilter, RecipeFilter
 # from .pagination import LimitPagination
@@ -58,7 +58,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #             recipe__shoppingcart__user=self.request.user
     #         )
     #     if self.action == 'favorite':
-    #         return Favorite.objects.all()
+    #         return FavoriteRecipe.objects.all()
     #     return Recipe.objects.all()
 
     # def perform_create(self, serializer):
@@ -106,7 +106,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(methods=['post', 'delete'], detail=True)
     def favorite(self, request, *args, **kwargs):
         return self.user_recipe_relation(
-            request, kwargs.get('pk'), model=Favorite,
+            request, kwargs.get('pk'), model=FavoriteRecipe,
             error_message='Этот рецепт уже не находится у вас в избранном.'
         )
 

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import (Category, Cuisine, Favorite, Ingredient, Recipe,
+from .models import (Category, Cuisine, FavoriteRecipe, Ingredient, Recipe,
                      RecipeImage, RecipeIngredient, Selection, SelectionRecipe,
                      Tag)
 
@@ -27,5 +27,5 @@ admin.site.register(Selection)
 admin.site.register(SelectionRecipe)
 admin.site.register(Cuisine)
 admin.site.register(Tag)
-admin.site.register(Favorite)
+admin.site.register(FavoriteRecipe)
 # admin.site.register(ShoppingCart)

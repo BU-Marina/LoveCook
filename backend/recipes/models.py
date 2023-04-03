@@ -326,7 +326,7 @@ class RecipeIngredient(models.Model):
                 f'используется в рецепте {self.recipe}')
 
 
-class Favorite(models.Model):
+class FavoriteRecipe(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
