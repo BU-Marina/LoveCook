@@ -78,7 +78,7 @@ class Command(BaseCommand):
         }
     }
     to_set = {
-        Recipe: "tags",
+        Recipe: ("tags", Tag),
     }
 
     def data_already_loaded(self, model):
@@ -131,10 +131,15 @@ class Command(BaseCommand):
                 return
 
             if model in self.to_set:
-                field_name = self.to_set[model]
+                field_name, field_model = self.to_set[model]
                 for obj in objs:
                     try:
-                        values = obj.pop(field_name)
+                        values = [
+                            field_model.objects.get_or_create(
+                                name=value
+                            )[0] for value in obj.pop(field_name)
+                        ]
+                        print(field_name, values)
                     except KeyError:
                         values = []
                         print(
