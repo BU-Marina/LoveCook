@@ -10,7 +10,7 @@ from django.core.management import BaseCommand
 from foodgram.settings import BASE_DIR
 from recipes.models import (Category, Cuisine, FavoriteRecipe, Ingredient, Recipe,
                             RecipeImage, RecipeIngredient, Selection,
-                            SelectionRecipe, Tag)
+                            SelectionRecipe, Tag, Step)
 
 # from users.models import Follow
 
@@ -38,7 +38,7 @@ def get_instance(pk, model):
 class Command(BaseCommand):
     help = 'Загружает тестовые данные из json файла'
     data_path = os.path.join(BASE_DIR, 'data/tests')
-    file_names = {
+    file_names = { # lookups?
         Ingredient: 'ingredients.json',
         User: 'users.json',
         Tag: 'tags.json',
@@ -50,6 +50,7 @@ class Command(BaseCommand):
         RecipeImage: 'recipesimages.json',
         RecipeIngredient: 'recipesingreds.json',
         FavoriteRecipe: 'favorites.json',
+        Step: 'steps.json',
     }
     to_convert = {
         Ingredient: {"image": (image64_decode,)},
@@ -75,10 +76,12 @@ class Command(BaseCommand):
         FavoriteRecipe: {
             "recipe": (get_instance, Recipe),
             "user": (get_instance, User)
-        }
+        },
+        Step: {"recipe": (get_instance, Recipe)},
     }
     to_set = {
         Recipe: ("tags", Tag),
+        Step: ("ingredients", Ingredient),
     }
 
     def data_already_loaded(self, model):
@@ -134,12 +137,7 @@ class Command(BaseCommand):
                 field_name, field_model = self.to_set[model]
                 for obj in objs:
                     try:
-                        values = [
-                            field_model.objects.get_or_create(
-                                name=value
-                            )[0] for value in obj.pop(field_name)
-                        ]
-                        print(field_name, values)
+                        values = obj.pop(field_name)
                     except KeyError:
                         values = []
                         print(
@@ -147,8 +145,24 @@ class Command(BaseCommand):
                             f'{obj} не найдено. Проверьте соответствие '
                             'имени поля. Данные пропущены.\n'
                         )
+                    try:
+                        converted_values = [
+                            field_model.objects.get(id=value) for value in values
+                        ]
+                    except ValueError:
+                        converted_values = [
+                            field_model.objects.get_or_create(
+                                name=value
+                            )[0] for value in values
+                        ]
+                    except Exception as e:
+                        converted_values = []
+                        print(
+                            f'{model.__name__}: Данные пропущены.\n'
+                            f'Exception: {e}'
+                        )
                     instance = model.objects.create(**obj)
-                    getattr(instance, field_name).set(values)
+                    getattr(instance, field_name).set(converted_values)
 
             else:
                 model.objects.bulk_create([model(**obj) for obj in objs])
