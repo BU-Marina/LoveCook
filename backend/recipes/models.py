@@ -242,18 +242,6 @@ class RecipeImage(models.Model):
         return f'Картинка рецепта {self.recipe}'
 
 
-@receiver(pre_delete, sender=Selection)
-@receiver(pre_delete, sender=Ingredient)
-@receiver(pre_delete, sender=RecipeImage)
-def recipeimage_delete(sender, instance, **kwargs):
-    try:
-        instance.image.delete(False)
-    except AttributeError:
-        instance.cover.delete(False)
-    except Exception:
-        pass
-
-
 class SelectionRecipe(CreatedModel):
     selection = models.ForeignKey(
         Selection,
@@ -331,12 +319,12 @@ class FavoriteRecipe(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='favorited_by'
+        related_name='favorite_recipes'
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='favorited'
+        related_name='favorited_by'
     )
 
     class Meta:
@@ -347,6 +335,69 @@ class FavoriteRecipe(models.Model):
 
     def __str__(self) -> str:
         return f'Рецепт {self.recipe} в избранном у {self.user}'
+
+
+class Step(models.Model):
+    serial_num = models.PositiveSmallIntegerField(
+        verbose_name='Порядковый номер',
+        help_text='Укажите порядковый номер шага'
+    )
+    description = models.CharField(
+        max_length=500,
+        verbose_name='Описание',
+        help_text='Опишите действия на этом шаге'
+    )
+    note = models.CharField(
+        max_length=250,
+        verbose_name='Примечание',
+        help_text='Добавьте уточняющие детали к описанию шага',
+        blank=True
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='steps'
+    )
+    ingredients = models.ManyToManyField(
+        Ingredient,
+        verbose_name='Ингредиенты',
+        help_text='Выберите ингредиенты, используемые на этом шаге',
+        related_name='ingredients'
+    )
+
+    def __str__(self) -> str:
+        return (
+            f'Шаг {self.serial_num} в рецепте {self.recipe}: {self.description}'
+        )
+
+
+class StepImage(models.Model):
+    step = models.ForeignKey(
+        Step,
+        on_delete=models.CASCADE,
+        related_name='images'
+    )
+    image = models.ImageField(
+        upload_to='recipes/steps/images/',
+        verbose_name='Фото',
+        help_text='Загрузите фото к шагу'
+    )
+
+    def __str__(self) -> str:
+        return f'Фото шага {self.step}'
+
+
+@receiver(pre_delete, sender=StepImage)
+@receiver(pre_delete, sender=Selection)
+@receiver(pre_delete, sender=Ingredient)
+@receiver(pre_delete, sender=RecipeImage)
+def image_delete(sender, instance, **kwargs):
+    try:
+        instance.image.delete(False)
+    except AttributeError:
+        instance.cover.delete(False)
+    except Exception:
+        pass
 
 
 class ShoppingCart(models.Model):
