@@ -1,0 +1,12 @@
+[
+    {
+        "id": 0,
+        "serial_num": 1,
+        "description": "Нарезать овощи",
+        "recipe": 0,
+        "ingredients": [
+            0,
+            1
+        ]
+    }
+]
