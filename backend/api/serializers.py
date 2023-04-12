@@ -7,7 +7,7 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
                             FavoriteRecipe, Recipe, RecipeImage, RecipeIngredient,
-                            Selection, Tag)
+                            Selection, Tag, Step)
 
 # from users.models import Follow
 
@@ -72,7 +72,7 @@ class UserSerializer(serializers.ModelSerializer):
 class RecipeRepresentationSerializer(serializers.ModelSerializer):
     ...
 #     ingredients = RecipeIngredientSerializer(
-#         many=True, read_only=True, source='recipe_ingredients'
+#         many=True, read_only=True, source='ingredients_info'
 #     )
 #     tags = TagSerializer(many=True, read_only=True)
 #     author = UserSerializer(many=False, read_only=True)
@@ -150,10 +150,20 @@ class SlugCreatedField(serializers.SlugRelatedField):
             self.fail('invalid')
 
 
+class StepSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Step
+        fields = (
+            'serial_num', 'description', 'note', 'ingredients'
+        )
+
+
 class RecipeSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientSerializer(
-        many=True, read_only=False, required=True, source='recipe_ingredients'
+        many=True, read_only=False, required=True, source='ingredients_info'
     )
+    steps = StepSerializer(many=True, read_only=False, required=True)
     selections = serializers.PrimaryKeyRelatedField(
         many=True, read_only=False, required=False,
         queryset=Selection.objects.all()
@@ -191,7 +201,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         fields = (
             'title', 'description', 'servings', 'cooking_time',
             'cuisine', 'ending_phrase', 'images', 'video', 'tags',
-            'selections', 'ingredients', 'author'
+            'selections', 'ingredients', 'steps', 'author'
         )
 
     def set_recipe_relation(self, recipe, objs_data, model) -> None:
@@ -203,8 +213,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         model.objects.bulk_create(objs)
 
     def create(self, validated_data):
-        ingredients = validated_data.pop('recipe_ingredients')
+        ingredients = validated_data.pop('ingredients_info')
         images = validated_data.pop('images')
+        steps = validated_data.pop('steps')
         tags = validated_data.pop('tags', [])
         selections = validated_data.pop('selections', [])
 
@@ -214,6 +225,12 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         self.set_recipe_relation(recipe, ingredients, RecipeIngredient)
         self.set_recipe_relation(recipe, images, RecipeImage)
+
+        for data in steps:
+            ingredients = data.pop('ingredients', [])
+            data['recipe'] = recipe
+            step = Step.objects.create(**data)
+            step.ingredients.set(ingredients)
 
         return recipe
 
@@ -259,7 +276,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     #         RecipeIngredient.objects.filter(
     #             recipe=instance
     #         ).delete()
-    #         ingredients_data = validated_data.pop('recipe_ingredients')
+    #         ingredients_data = validated_data.pop('ingredients_info')
     #         self.set_ingredients(instance, ingredients_data)
 
     #     if 'tags' in validated_data:
