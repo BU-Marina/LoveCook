@@ -361,8 +361,7 @@ class Step(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient,
         verbose_name='Ингредиенты',
-        help_text='Выберите ингредиенты, используемые на этом шаге',
-        related_name='ingredients'
+        help_text='Выберите ингредиенты, используемые на этом шаге'
     )
 
     def __str__(self) -> str:

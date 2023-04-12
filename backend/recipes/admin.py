@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (Category, Cuisine, FavoriteRecipe, Ingredient, Recipe,
                      RecipeImage, RecipeIngredient, Selection, SelectionRecipe,
-                     Tag)
+                     Tag, Step, StepImage)
 
 
 class RecipeAdmin(admin.ModelAdmin):
@@ -10,6 +10,8 @@ class RecipeAdmin(admin.ModelAdmin):
     list_filter = ('title', 'author', 'tags')
     # readonly_fields = ('favorited_by',)
 
+    # def show_visitors(self, obj):
+    #     return "\n".join([a.visitor_name for a in obj.visitor_set.all()])
     # def favorited_by(self, obj):
     #     return obj.favorited.count()
 
@@ -28,4 +30,6 @@ admin.site.register(SelectionRecipe)
 admin.site.register(Cuisine)
 admin.site.register(Tag)
 admin.site.register(FavoriteRecipe)
+admin.site.register(Step)
+admin.site.register(StepImage)
 # admin.site.register(ShoppingCart)
