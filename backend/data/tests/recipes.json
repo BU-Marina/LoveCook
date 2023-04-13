@@ -7,7 +7,7 @@
         "author": 1,
         "video": "",
         "servings": 2,
-        "cuisine": null,
+        "cuisine": 0,
         "tags": [
             "обед",
             "бюджетно"

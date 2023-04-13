@@ -32,7 +32,7 @@ def image64_decode(imagebase64, *args):
 
 
 def get_instance(pk, model):
-    return model[0].objects.get(pk=pk)
+    return model.objects.get(pk=pk)
 
 
 class Command(BaseCommand):
@@ -60,7 +60,10 @@ class Command(BaseCommand):
             "author": (get_instance, User),
             "category": (get_instance, Category)
         },
-        Recipe: {"author": (get_instance, User)},
+        Recipe: {
+            "author": (get_instance, User),
+            "cuisine": (get_instance, Cuisine)
+        },
         SelectionRecipe: {
             "selection": (get_instance, Selection),
             "recipe": (get_instance, Recipe)
@@ -98,7 +101,7 @@ class Command(BaseCommand):
         try:
             for obj_data in data:
                 value = obj_data.pop(field_name)
-                obj_data[field_name] = func(value, args)
+                obj_data[field_name] = func(value, *args)
                 objs.append(obj_data)
         except Exception as e:
             print(
