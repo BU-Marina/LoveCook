@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (Category, Cuisine, FavoriteRecipe, Ingredient, Recipe,
                      RecipeImage, RecipeIngredient, Selection, SelectionRecipe,
-                     Tag, Step, StepImage)
+                     Step, StepImage, Tag)
 
 
 class RecipeAdmin(admin.ModelAdmin):

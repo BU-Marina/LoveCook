@@ -366,7 +366,8 @@ class Step(models.Model):
 
     def __str__(self) -> str:
         return (
-            f'Шаг {self.serial_num} в рецепте {self.recipe}: {self.description}'
+            f'Шаг {self.serial_num} в рецепте {self.recipe}: '
+            f'{self.description}'
         )
 
 

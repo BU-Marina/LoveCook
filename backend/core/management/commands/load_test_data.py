@@ -8,9 +8,9 @@ from django.core.files.base import ContentFile
 from django.core.management import BaseCommand
 
 from foodgram.settings import BASE_DIR
-from recipes.models import (Category, Cuisine, FavoriteRecipe, Ingredient, Recipe,
-                            RecipeImage, RecipeIngredient, Selection,
-                            SelectionRecipe, Tag, Step)
+from recipes.models import (Category, Cuisine, FavoriteRecipe, Ingredient,
+                            Recipe, RecipeImage, RecipeIngredient, Selection,
+                            SelectionRecipe, Step, Tag)
 
 # from users.models import Follow
 
@@ -38,7 +38,7 @@ def get_instance(pk, model):
 class Command(BaseCommand):
     help = 'Загружает тестовые данные из json файла'
     data_path = os.path.join(BASE_DIR, 'data/tests')
-    file_names = { # lookups?
+    file_names = {
         Ingredient: 'ingredients.json',
         User: 'users.json',
         Tag: 'tags.json',
@@ -147,7 +147,9 @@ class Command(BaseCommand):
                         )
                     try:
                         converted_values = [
-                            field_model.objects.get(id=value) for value in values
+                            field_model.objects.get(
+                                id=value
+                            ) for value in values
                         ]
                     except ValueError:
                         converted_values = [

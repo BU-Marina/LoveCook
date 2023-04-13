@@ -6,8 +6,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
-                            FavoriteRecipe, Recipe, RecipeImage, RecipeIngredient,
-                            Selection, Tag, Step)
+                            FavoriteRecipe, Recipe, RecipeImage,
+                            RecipeIngredient, Selection, Step, Tag)
 
 # from users.models import Follow
 
