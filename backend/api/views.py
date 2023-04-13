@@ -9,12 +9,13 @@ from rest_framework.generics import get_object_or_404
 # from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from recipes.models import FavoriteRecipe, Recipe
+from recipes.models import FavoriteRecipe, Recipe, Selection
 
 # from .filters import IngredientFilter, RecipeFilter
 # from .pagination import LimitPagination
 from .permissions import IsAuthorOrReadOnly
-from .serializers import FavoriteSerializer, RecipeSerializer
+from .serializers import (FavoriteSerializer, RecipeSerializer,
+                          SelectionSerializer, SelectionListSerializer)
 
 # from django.http import HttpResponse
 
@@ -146,6 +147,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #         'attachment; filename={}'.format(filename)
     #     )
     #     return response
+
+
+class SelectionViewSet(viewsets.ModelViewSet):
+    queryset = Selection.objects.all()
+    serializer_class = SelectionSerializer
+    permission_classes = [
+        IsAuthorOrReadOnly,
+    ]
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return SelectionListSerializer
+        return SelectionSerializer
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

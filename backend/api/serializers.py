@@ -6,8 +6,9 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
-                            FavoriteRecipe, Recipe, RecipeImage,
-                            RecipeIngredient, Selection, Step, Tag)
+                            FavoriteRecipe, FavoriteSelection, Recipe,
+                            RecipeImage, RecipeIngredient, Selection, Step,
+                            Tag)
 
 # from users.models import Follow
 
@@ -315,6 +316,50 @@ class FavoriteSerializer(serializers.ModelSerializer):
 #             instance.recipe,
 #             context={'request': self.context.get('request')}
 #         ).data
+
+
+class SelectionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Selection
+        fields = (
+            'id', 'title'
+        )
+
+
+class AuthorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'first_name', 'last_name', 'username', 'image'
+        )
+
+
+class SelectionListSerializer(serializers.ModelSerializer):
+    author = AuthorSerializer()
+    cover = Base64ImageField(read_only=True)
+    is_favorited = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Selection
+        fields = (
+            'id', 'title', 'author', 'cover', 'is_favorited',
+            'recipes_count'
+        )
+    
+    def get_is_favorited(self, obj):
+        user = self.context['request'].user
+        return (
+            user.is_authenticated
+            and FavoriteSelection.objects.filter(
+                user=user, selection=obj
+            ).exists()
+        )
+
+    def get_recipes_count(self, obj):
+        return obj.recipe_set.count()
 
 
 class RecipeListSerializer(serializers.ModelSerializer):

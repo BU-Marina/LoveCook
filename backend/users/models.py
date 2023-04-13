@@ -12,6 +12,20 @@ class User(AbstractUser):
     last_name = models.CharField(
         max_length=16
     )
+    image = models.ImageField(
+        upload_to='users/images/',
+        verbose_name='Фото',
+        help_text='Загрузите картинку профиля',
+        blank=True,
+        null=True
+    )
+    background_image = models.ImageField(
+        upload_to='users/background_images/',
+        verbose_name='Фото',
+        help_text='Загрузите фоновую картинку профиля',
+        blank=True,
+        null=True
+    )
 
     class Meta:
         ordering = ['-date_joined']

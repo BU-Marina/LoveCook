@@ -337,6 +337,28 @@ class FavoriteRecipe(models.Model):
         return f'Рецепт {self.recipe} в избранном у {self.user}'
 
 
+class FavoriteSelection(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='favorite_selectons'
+    )
+    selection = models.ForeignKey(
+        Selection,
+        on_delete=models.CASCADE,
+        related_name='favorited_by'
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'selection'], name='unique_favorite')
+        ]
+
+    def __str__(self) -> str:
+        return f'Подборка {self.recipe} в избранном у {self.user}'
+
+
 class Step(models.Model):
     serial_num = models.PositiveSmallIntegerField(
         verbose_name='Порядковый номер',
