@@ -382,7 +382,54 @@ class FavoriteSelection(models.Model):
         ]
 
     def __str__(self) -> str:
-        return f'Подборка {self.recipe} в избранном у {self.user}'
+        return f'Подборка {self.selection} в избранном у {self.user}'
+
+
+class RecommendRecipe(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='recommend_recipes'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='recommended_by'
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'], name='unique_recommend')
+        ]
+
+    def __str__(self) -> str:
+        return f'Рецепт {self.recipe} рекомендован пользователем {self.user}'
+
+
+class RecommendSelection(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='recommend_selectons'
+    )
+    selection = models.ForeignKey(
+        Selection,
+        on_delete=models.CASCADE,
+        related_name='recommended_by'
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'selection'], name='unique_recommend')
+        ]
+
+    def __str__(self) -> str:
+        return (
+            f'Подборка {self.selection} рекомендована пользователем '
+            f'{self.user}'
+        )
 
 
 class Step(models.Model):
