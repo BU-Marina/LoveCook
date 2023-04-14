@@ -10,7 +10,7 @@ from django.core.management import BaseCommand
 from foodgram.settings import BASE_DIR
 from recipes.models import (Category, Cuisine, FavoriteRecipe, Ingredient,
                             Recipe, RecipeImage, RecipeIngredient, Selection,
-                            SelectionRecipe, Step, Tag)
+                            SelectionRecipe, Step, Tag, Equipment)
 
 # from users.models import Follow
 
@@ -45,6 +45,7 @@ class Command(BaseCommand):
         Category: 'categories.json',
         Selection: 'selections.json',
         Cuisine: 'cuisines.json',
+        Equipment: 'equipment.json',
         Recipe: 'recipes.json',
         SelectionRecipe: 'selectionsrecipes.json',
         RecipeImage: 'recipesimages.json',
@@ -81,10 +82,11 @@ class Command(BaseCommand):
             "user": (get_instance, User)
         },
         Step: {"recipe": (get_instance, Recipe)},
+        Equipment: {"image": (image64_decode,)},
     }
     to_set = {
-        Recipe: ("tags", Tag),
-        Step: ("ingredients", Ingredient),
+        Recipe: {"tags": Tag, "equipment": Equipment},
+        Step: {"ingredients": Ingredient},
     }
 
     def data_already_loaded(self, model):
@@ -137,37 +139,40 @@ class Command(BaseCommand):
                 return
 
             if model in self.to_set:
-                field_name, field_model = self.to_set[model]
-                for obj in objs:
-                    try:
-                        values = obj.pop(field_name)
-                    except KeyError:
-                        values = []
-                        print(
-                            f'{model.__name__}: Поле {field_name} объекта '
-                            f'{obj} не найдено. Проверьте соответствие '
-                            'имени поля. Данные пропущены.\n'
-                        )
-                    try:
-                        converted_values = [
-                            field_model.objects.get(
-                                id=value
-                            ) for value in values
-                        ]
-                    except ValueError:
-                        converted_values = [
-                            field_model.objects.get_or_create(
-                                name=value
-                            )[0] for value in values
-                        ]
-                    except Exception as e:
-                        converted_values = []
-                        print(
-                            f'{model.__name__}: Данные пропущены.\n'
-                            f'Exception: {e}'
-                        )
-                    instance = model.objects.create(**obj)
-                    getattr(instance, field_name).set(converted_values)
+                values_to_set = []
+                for field_name, field_model in self.to_set[model].items():
+                    for obj in objs:
+                        try:
+                            values = obj.pop(field_name)
+                        except KeyError:
+                            values = []
+                            print(
+                                f'{model.__name__}: Поле {field_name} объекта'
+                                f' {obj} не найдено. Проверьте соответствие '
+                                'имени поля. Данные пропущены.\n'
+                            )
+                        try:
+                            converted_values = [
+                                field_model.objects.get(
+                                    id=value
+                                ) for value in values
+                            ]
+                        except ValueError:
+                            converted_values = [
+                                field_model.objects.get_or_create(
+                                    name=value
+                                )[0] for value in values
+                            ]
+                        except Exception as e:
+                            converted_values = []
+                            print(
+                                f'{model.__name__}: Данные пропущены.\n'
+                                f'Exception: {e}'
+                            )
+                        values_to_set.append((field_name, converted_values))
+                instance = model.objects.create(**obj)
+                for field_name, values in values_to_set:
+                    getattr(instance, field_name).set(values)
 
             else:
                 model.objects.bulk_create([model(**obj) for obj in objs])
