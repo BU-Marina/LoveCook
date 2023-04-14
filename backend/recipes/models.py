@@ -137,6 +137,27 @@ class Cuisine(CreatedModel):
         return self.name
 
 
+class Equipment(models.Model):
+    name = models.CharField(
+        max_length=250,
+        verbose_name='Название',
+        help_text='Введите название'
+    )
+    description = models.TextField(
+        verbose_name='Описание',
+        help_text='Добавьте описание',
+        blank=True
+    )
+    image = models.ImageField(
+        upload_to='equipment/images/',
+        verbose_name='Картинка',
+        help_text='Загрузите картинку'
+    )
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class Recipe(CreatedModel):
     title = models.CharField(
         max_length=200,
@@ -214,6 +235,11 @@ class Recipe(CreatedModel):
         through='RecipeIngredient',
         verbose_name='Ингредиенты',
         help_text='Укажите ингредиенты, используемые в рецепте'
+    )
+    equipment = models.ManyToManyField(
+        Equipment,
+        verbose_name='Оборудование',
+        help_text='Укажите используемое оборудование'
     )
 
     # class Meta:
