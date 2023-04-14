@@ -116,6 +116,16 @@ class Selection(CreatedModel):
         related_name='selections',
         on_delete=models.SET(get_default_category)
     )
+    favorited_by = models.ManyToManyField(
+        User,
+        through='FavoriteSelection',
+        related_name='favorite_selections'
+    )
+    recommended_by = models.ManyToManyField(
+        User,
+        through='RecommendSelection',
+        related_name='recommend_selections'
+    )
 
     def __str__(self) -> str:
         return self.title
@@ -241,6 +251,16 @@ class Recipe(CreatedModel):
         verbose_name='Оборудование',
         help_text='Укажите используемое оборудование'
     )
+    favorited_by = models.ManyToManyField(
+        User,
+        through='FavoriteRecipe',
+        related_name='favorite_recipes'
+    )
+    recommended_by = models.ManyToManyField(
+        User,
+        through='RecommendRecipe',
+        related_name='recommend_recipes'
+    )
 
     # class Meta:
     #     ordering = ['-created']
@@ -344,13 +364,11 @@ class RecipeIngredient(models.Model):
 class FavoriteRecipe(models.Model):
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
-        related_name='favorite_recipes'
+        on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE,
-        related_name='favorited_by'
+        on_delete=models.CASCADE
     )
 
     class Meta:
@@ -366,13 +384,11 @@ class FavoriteRecipe(models.Model):
 class FavoriteSelection(models.Model):
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
-        related_name='favorite_selectons'
+        on_delete=models.CASCADE
     )
     selection = models.ForeignKey(
         Selection,
-        on_delete=models.CASCADE,
-        related_name='favorited_by'
+        on_delete=models.CASCADE
     )
 
     class Meta:
@@ -388,13 +404,11 @@ class FavoriteSelection(models.Model):
 class RecommendRecipe(models.Model):
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
-        related_name='recommend_recipes'
+        on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE,
-        related_name='recommended_by'
+        on_delete=models.CASCADE
     )
 
     class Meta:
@@ -410,13 +424,11 @@ class RecommendRecipe(models.Model):
 class RecommendSelection(models.Model):
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
-        related_name='recommend_selectons'
+        on_delete=models.CASCADE
     )
     selection = models.ForeignKey(
         Selection,
-        on_delete=models.CASCADE,
-        related_name='recommended_by'
+        on_delete=models.CASCADE
     )
 
     class Meta:
