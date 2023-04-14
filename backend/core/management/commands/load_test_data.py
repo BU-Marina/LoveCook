@@ -10,7 +10,8 @@ from django.core.management import BaseCommand
 from foodgram.settings import BASE_DIR
 from recipes.models import (Category, Cuisine, FavoriteRecipe, Ingredient,
                             Recipe, RecipeImage, RecipeIngredient, Selection,
-                            SelectionRecipe, Step, Tag, Equipment, RecommendRecipe)
+                            SelectionRecipe, Step, Tag, Equipment, RecommendRecipe,
+                            RecipeReview)
 
 # from users.models import Follow
 
@@ -52,7 +53,8 @@ class Command(BaseCommand):
         RecipeIngredient: 'recipesingreds.json',
         FavoriteRecipe: 'favoriterecipes.json',
         Step: 'steps.json',
-        RecommendRecipe: 'recommendrecipes.json'
+        RecommendRecipe: 'recommendrecipes.json',
+        RecipeReview: 'recipereviews.json'
     }
     to_convert = {
         Ingredient: {"image": (image64_decode,)},
@@ -85,6 +87,10 @@ class Command(BaseCommand):
         Step: {"recipe": (get_instance, Recipe)},
         Equipment: {"image": (image64_decode,)},
         RecommendRecipe: {
+            "recipe": (get_instance, Recipe),
+            "user": (get_instance, User)
+        },
+        RecipeReview: {
             "recipe": (get_instance, Recipe),
             "user": (get_instance, User)
         },
