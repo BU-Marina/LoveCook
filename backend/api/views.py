@@ -15,7 +15,8 @@ from recipes.models import FavoriteRecipe, Recipe, Selection
 # from .pagination import LimitPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, RecipeSerializer,
-                          SelectionSerializer, SelectionListSerializer)
+                          SelectionSerializer, SelectionListSerializer,
+                          RecipeListSerializer)
 
 # from django.http import HttpResponse
 
@@ -47,6 +48,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         # if self.action == 'shopping_cart':
         #     return ShoppingCartSerializer
+        if self.action == 'list':
+            return RecipeListSerializer
         if self.action == 'favorite':
             return FavoriteSerializer
         return RecipeSerializer
