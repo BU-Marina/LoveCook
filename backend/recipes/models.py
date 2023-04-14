@@ -288,6 +288,28 @@ class RecipeImage(models.Model):
         return f'Картинка рецепта {self.recipe}'
 
 
+class RecipeReview(CreatedModel):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
+    comment = models.CharField(
+        max_length=500,
+        verbose_name='Комментарий',
+        help_text='Оставьте свой комментарий'
+    )
+    # rating = ...
+
+    def __str__(self) -> str:
+        return f'Комментарий пользователя {self.user} к рецепту {self.recipe}'
+
+
 class SelectionRecipe(CreatedModel):
     selection = models.ForeignKey(
         Selection,
