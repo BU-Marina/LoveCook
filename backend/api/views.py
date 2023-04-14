@@ -14,9 +14,9 @@ from recipes.models import FavoriteRecipe, Recipe, Selection
 # from .filters import IngredientFilter, RecipeFilter
 # from .pagination import LimitPagination
 from .permissions import IsAuthorOrReadOnly
-from .serializers import (FavoriteSerializer, RecipeSerializer,
-                          SelectionSerializer, SelectionListSerializer,
-                          RecipeListSerializer)
+from .serializers import (FavoriteSerializer, RecipeListSerializer,
+                          RecipeSerializer, SelectionListSerializer,
+                          SelectionSerializer)
 
 # from django.http import HttpResponse
 

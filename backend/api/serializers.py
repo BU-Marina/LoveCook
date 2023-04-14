@@ -1,16 +1,14 @@
 from django.contrib.auth import get_user_model
 
-from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64FileField, Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
-                            FavoriteRecipe, FavoriteSelection, Recipe,
-                            RecipeImage, RecipeIngredient, Selection, Step,
-                            Tag, Ingredient, Equipment, RecommendRecipe,
-                            RecipeReview)
-
+                            Equipment, FavoriteRecipe, FavoriteSelection,
+                            Ingredient, Recipe, RecipeImage, RecipeIngredient,
+                            RecipeReview, RecommendRecipe, Selection, Step,
+                            Tag)
 from users.models import Follow
 
 RECIPES_LIMIT_DEFAULT = '6'
@@ -98,7 +96,7 @@ class SelectionListSerializer(serializers.ModelSerializer):
             'recipes_count', 'favorited_by_amount'
         )
         read_only_fields = fields
-    
+
     def get_is_favorited(self, obj):
         user = self.context['request'].user
         return (
@@ -240,7 +238,7 @@ class EquipmentListSerializer(serializers.ModelSerializer):
 
 class RecipeReviewSerializer(serializers.ModelSerializer):
     user = AuthorSerializer(many=False, read_only=True)
-    
+
     class Meta:
         model = RecipeReview
         fields = ('user', 'comment')
@@ -303,7 +301,7 @@ class RecipeReprSerializer(serializers.ModelSerializer):
 
     def get_ingredients_amount(self, obj):
         return obj.ingredients.count()
-    
+
     def get_steps_amount(self, obj):
         return obj.steps.count()
 
@@ -328,7 +326,7 @@ class RecipeReprSerializer(serializers.ModelSerializer):
             many=True,
             context={'request': self.context.get('request')}
         ).data
-    
+
     def get_reviews(self, obj):
         request = self.context.get('request')
         reviews_limit = request.query_params.get(
@@ -368,7 +366,6 @@ class RecipeListSerializer(RecipeReprSerializer):
 
     #     tags = obj.tags.all()[:int(tags_limit)]
 
-        
     #     return TagSerializer(
     #         tags, many=True, context={'request': request}
     #     ).data

@@ -8,10 +8,10 @@ from django.core.files.base import ContentFile
 from django.core.management import BaseCommand
 
 from foodgram.settings import BASE_DIR
-from recipes.models import (Category, Cuisine, FavoriteRecipe, Ingredient,
-                            Recipe, RecipeImage, RecipeIngredient, Selection,
-                            SelectionRecipe, Step, Tag, Equipment, RecommendRecipe,
-                            RecipeReview)
+from recipes.models import (Category, Cuisine, Equipment, FavoriteRecipe,
+                            Ingredient, Recipe, RecipeImage, RecipeIngredient,
+                            RecipeReview, RecommendRecipe, Selection,
+                            SelectionRecipe, Step, Tag)
 
 # from users.models import Follow
 
