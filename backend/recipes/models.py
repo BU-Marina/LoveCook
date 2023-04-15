@@ -471,6 +471,12 @@ class Step(models.Model):
         verbose_name='Порядковый номер',
         help_text='Укажите порядковый номер шага'
     )
+    title = models.CharField(
+        max_length=200,
+        verbose_name='Название',
+        help_text='Дайте короткое название шагу',
+        blank=True
+    )
     description = models.CharField(
         max_length=500,
         verbose_name='Описание',

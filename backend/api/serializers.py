@@ -179,7 +179,7 @@ class StepReprSerializer(serializers.ModelSerializer):
     class Meta:
         model = Step
         fields = (
-            'serial_num', 'description', 'note', 'ingredients'
+            'serial_num', 'title', 'description', 'note', 'ingredients'
         )
         read_only_fields = fields
 
@@ -189,7 +189,7 @@ class StepSerializer(serializers.ModelSerializer):
     class Meta:
         model = Step
         fields = (
-            'serial_num', 'description', 'note', 'ingredients'
+            'serial_num', 'title', 'description', 'note', 'ingredients'
         )
 
     def to_representation(self, instance):
