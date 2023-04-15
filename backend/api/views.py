@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from recipes.models import FavoriteRecipe, Recipe, Selection
 
 # from .filters import IngredientFilter, RecipeFilter
-# from .pagination import LimitPagination
+from .pagination import CursorSetPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, RecipeListSerializer,
                           RecipeSerializer, SelectionListSerializer,
@@ -35,7 +35,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = [
         IsAuthorOrReadOnly,
     ]
-    # pagination_class = LimitPagination
+    pagination_class = CursorSetPagination
     # filter_backends = [
     #     filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend
     # ]
