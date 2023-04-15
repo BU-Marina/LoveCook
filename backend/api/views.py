@@ -1,3 +1,5 @@
+import random
+
 from django.contrib.auth import get_user_model
 
 # from django_filters.rest_framework import DjangoFilterBackend
@@ -113,6 +115,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             request, kwargs.get('pk'), model=FavoriteRecipe,
             error_message='Этот рецепт уже не находится у вас в избранном.'
         )
+
+    @action(methods=['get'], detail=False)
+    def random(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        recipe = random.choice(queryset)
+        serializer = RecipeListSerializer(
+            recipe, context={'request': request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     # @action(methods=['get'], detail=False)
     # def download_shopping_cart(self, request, *args, **kwargs):
