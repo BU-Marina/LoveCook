@@ -354,8 +354,8 @@ class RecipeListSerializer(RecipeReprSerializer):
         model = Recipe
         fields = (
             'id', 'title', 'description', 'servings', 'cooking_time',
-            'images', 'tags', 'ingredients_amount', 'steps_amount', 'author',
-            'is_favorited', 'favorited_by_amount'
+            'cuisine', 'images', 'tags', 'ingredients_amount', 'ingredients',
+            'steps_amount', 'author', 'is_favorited', 'favorited_by_amount'
         )
 
     # def get_tags(self, obj):
