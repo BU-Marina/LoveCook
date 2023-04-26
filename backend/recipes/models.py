@@ -397,7 +397,7 @@ class FavoriteRecipe(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'recipe'], name='unique_favorite')
+                fields=['user', 'recipe'], name='unique_recipe_favorite')
         ]
 
     def __str__(self) -> str:
@@ -417,7 +417,7 @@ class FavoriteSelection(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'selection'], name='unique_favorite')
+                fields=['user', 'selection'], name='unique_selection_favorite')
         ]
 
     def __str__(self) -> str:
@@ -437,7 +437,7 @@ class RecommendRecipe(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'recipe'], name='unique_recommend')
+                fields=['user', 'recipe'], name='unique_recipe_recommend')
         ]
 
     def __str__(self) -> str:
@@ -457,7 +457,7 @@ class RecommendSelection(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'selection'], name='unique_recommend')
+                fields=['user', 'selection'], name='unique_selection_recommend')
         ]
 
     def __str__(self) -> str:
