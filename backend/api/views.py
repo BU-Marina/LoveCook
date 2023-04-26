@@ -175,6 +175,15 @@ class SelectionViewSet(viewsets.ModelViewSet):
             return SelectionListSerializer
         return SelectionSerializer
 
+    @action(methods=['get'], detail=True)
+    def random_recipe(self, request, *args, **kwargs):
+        selection = get_object_or_404(Selection, pk=kwargs.get('pk'))
+        recipe = random.choice(selection.recipes.all())
+        serializer = RecipeListSerializer(
+            recipe, context={'request': request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     ...
