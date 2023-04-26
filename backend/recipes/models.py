@@ -238,7 +238,8 @@ class Recipe(CreatedModel):
         Selection,
         through='SelectionRecipe',
         verbose_name='Подборки',
-        help_text='Добавьте рецепт в подборку'
+        help_text='Добавьте рецепт в подборку',
+        related_name='recipes'
     )
     ingredients = models.ManyToManyField(
         Ingredient,
