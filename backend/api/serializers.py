@@ -107,7 +107,7 @@ class SelectionListSerializer(serializers.ModelSerializer):
         )
 
     def get_recipes_count(self, obj):
-        return obj.recipe_set.count()
+        return obj.recipes.count()
 
     def get_favorited_by_amount(self, obj):
         return FavoriteSelection.objects.filter(selection=obj).count()
