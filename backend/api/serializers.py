@@ -19,6 +19,9 @@ RECOMMENDED_BY_LIMIT_DEFAULT = '5'
 MAX_HOURS = MAX_COOKING_TIME // 60
 MAX_TAGS_AMOUNT = 10
 MAX_IMAGES_AMOUNT = 10
+MIN_TITLE_LENGTH = 2
+MIN_DESCRIPTION_LENGTH = 8
+MIN_PHRASE_LENGTH = 3
 
 User = get_user_model()
 
@@ -407,6 +410,9 @@ class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
             'должно быть мин 1.'
         ),
         'too_many': 'Слишком много {name} (макс {max}).',
+        'too_short': '{name} должно содержать минимум {min} символа(-ов).',
+        'only_letters': '{name} не должно содержать цифры и символы.',
+        'no_digits': '{name} не должна содержать цифры.',
     }
 
     class Meta:
@@ -447,6 +453,43 @@ class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
             step.ingredients.set(ingredients)
 
         return recipe
+
+    def validate_title(self, value):
+        if len(value) < MIN_TITLE_LENGTH:
+            self.fail(
+                'too_short',
+                name='Название',
+                min=MIN_TITLE_LENGTH
+            )
+        if not all(symb.isalpha() or symb.isspace() for symb in value):
+            self.fail(
+                'only_letters',
+                name='Название'
+            )
+        return value
+
+    def validate_description(self, value):
+        if value and len(value) < MIN_DESCRIPTION_LENGTH:
+            self.fail(
+                'too_short',
+                name='Описание',
+                min=MIN_DESCRIPTION_LENGTH
+            )
+        return value
+
+    def validate_ending_phrase(self, value):
+        if value and len(value) < MIN_PHRASE_LENGTH:
+            self.fail(
+                'too_short',
+                name='Завершающая фраза',
+                min=MIN_PHRASE_LENGTH
+            )
+        if any(symb.isdigit() for symb in value):
+            self.fail(
+                'no_digits',
+                name='Завершающая фраза'
+            )
+        return value
 
     def validate_cooking_time(self, value):
         if not (MIN_COOKING_TIME <= value <= MAX_COOKING_TIME):
@@ -524,11 +567,11 @@ class FavoriteSerializer(serializers.ModelSerializer):
             )
         ]
 
-#     def to_representation(self, instance):
-#         return RecipeListSerializer(
-#             instance.recipe,
-#             context={'request': self.context.get('request')}
-#         ).data
+    def to_representation(self, instance):
+        return RecipeListSerializer(
+            instance.recipe,
+            context={'request': self.context.get('request')}
+        ).data
 
 
 class SelectionSerializer(serializers.ModelSerializer):
