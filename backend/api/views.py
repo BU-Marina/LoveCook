@@ -15,7 +15,7 @@ from rest_framework.response import Response
 
 from recipes.models import FavoriteRecipe, Recipe, Selection
 
-from .filters import RecipeFilters  # IngredientFilter
+from .filters import RecipeFilters
 from .pagination import CursorSetPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, RecipeListSerializer,
