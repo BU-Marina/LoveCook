@@ -3,8 +3,10 @@ import random
 from django.contrib.auth import get_user_model
 
 # from django_filters.rest_framework import DjangoFilterBackend
+from dj_rql.drf import RQLFilterBackend
+# from dj_rql.drf.compat import DjangoFiltersRQLFilterBackend
 from djoser.views import UserViewSet
-from rest_framework import status, viewsets  # filters
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
@@ -13,7 +15,7 @@ from rest_framework.response import Response
 
 from recipes.models import FavoriteRecipe, Recipe, Selection
 
-# from .filters import IngredientFilter, RecipeFilter
+from .filters import RecipeFilters  # IngredientFilter
 from .pagination import CursorSetPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, RecipeListSerializer,
@@ -36,11 +38,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         IsAuthorOrReadOnly,
     ]
     pagination_class = CursorSetPagination
+    filter_backends = (RQLFilterBackend, filters.OrderingFilter)
+    rql_filter_class = RecipeFilters
+    ordering_fields = ['created']
     # filter_backends = [
     #     filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend
     # ]
     # filterset_class = RecipeFilter
-    # ordering = ('-pub_date',)
+    # ordering = ('-created',)
 
     # def get_permissions(self):
     #     if self.action == 'download_shopping_cart':
