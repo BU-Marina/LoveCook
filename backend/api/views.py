@@ -41,11 +41,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = (RQLFilterBackend, filters.OrderingFilter)
     rql_filter_class = RecipeFilters
     ordering_fields = ['created']
+    ordering = ('-created',)
     # filter_backends = [
     #     filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend
     # ]
     # filterset_class = RecipeFilter
-    # ordering = ('-created',)
 
     # def get_permissions(self):
     #     if self.action == 'download_shopping_cart':
