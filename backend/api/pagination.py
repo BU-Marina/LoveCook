@@ -11,4 +11,4 @@ class LimitPagination(PageNumberPagination):
 class CursorSetPagination(CursorPagination):
     page_size = 50
     page_size_query_param = 'page_size'
-    # ordering = '-created'
+    ordering = '-created'
