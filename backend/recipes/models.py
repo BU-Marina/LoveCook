@@ -457,7 +457,8 @@ class RecommendSelection(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'selection'], name='unique_selection_recommend')
+                fields=['user', 'selection'], name='unique_selection_recommend'
+            )
         ]
 
     def __str__(self) -> str:

@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 
 from dj_rql.constants import FilterLookups
 from dj_rql.filter_cls import RQLFilterClass
-from dj_rql.qs import PrefetchRelated as PR
+from dj_rql.qs import PrefetchRelated
 
 from recipes.models import Recipe  # Ingredient, Tag
 
@@ -53,7 +53,7 @@ class RecipeFilters(RQLFilterClass):
         },
         {
             'namespace': 'cuisine',
-            'qs': PR('cuisine'),
+            'qs': PrefetchRelated('cuisine'),
             'filters': (
                 {
                     'filter': 'id',
@@ -72,7 +72,7 @@ class RecipeFilters(RQLFilterClass):
         },
         {
             'namespace': 'ingredients',
-            'qs': PR('ingredients'),
+            'qs': PrefetchRelated('ingredients'),
             'filters': (
                 {
                     'filter': 'id',
@@ -89,7 +89,7 @@ class RecipeFilters(RQLFilterClass):
         },
         {
             'namespace': 'equipment',
-            'qs': PR('equipment'),
+            'qs': PrefetchRelated('equipment'),
             'filters': (
                 {
                     'filter': 'id',
@@ -106,7 +106,7 @@ class RecipeFilters(RQLFilterClass):
         },
         {
             'namespace': 'tags',
-            'qs': PR('tags'),
+            'qs': PrefetchRelated('tags'),
             'filters': (
                 {
                     'filter': 'id',
@@ -120,7 +120,7 @@ class RecipeFilters(RQLFilterClass):
         },
         {
             'namespace': 'selections',
-            'qs': PR('selections'),
+            'qs': PrefetchRelated('selections'),
             'filters': (
                 {
                     'filter': 'title',
