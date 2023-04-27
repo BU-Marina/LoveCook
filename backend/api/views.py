@@ -124,7 +124,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(methods=['get'], detail=False)
     def random(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        recipe = random.choice(queryset)
+        filtered_queryset = self.filter_queryset(queryset)
+        recipe = random.choice(filtered_queryset)
         serializer = RecipeListSerializer(
             recipe, context={'request': request}
         )
@@ -183,7 +184,8 @@ class SelectionViewSet(viewsets.ModelViewSet):
     @action(methods=['get'], detail=True)
     def random_recipe(self, request, *args, **kwargs):
         selection = get_object_or_404(Selection, pk=kwargs.get('pk'))
-        recipe = random.choice(selection.recipes.all())
+        filtered_queryset = self.filter_queryset(selection.recipes.all())
+        recipe = random.choice(filtered_queryset)
         serializer = RecipeListSerializer(
             recipe, context={'request': request}
         )
