@@ -6,10 +6,10 @@ class User(AbstractUser):
     email = models.EmailField(
         unique=True
     )
-    first_name = models.CharField(
+    name = models.CharField(
         max_length=16
     )
-    last_name = models.CharField(
+    surname = models.CharField(
         max_length=16
     )
     image = models.ImageField(
