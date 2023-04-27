@@ -532,13 +532,35 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class SelectionSerializer(serializers.ModelSerializer):
+    recipes = RecipeListSerializer(
+        many=True, read_only=True
+    )
+    is_favorited = serializers.SerializerMethodField()
+    favorited_by_amount = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Selection
         fields = (
-            'id', 'title'
+            'id', 'title', 'is_favorited', 'favorited_by_amount',
+            'recipes_count', 'recipes'
         )
         read_only_fields = ('id',)
+
+    def get_is_favorited(self, obj):
+        user = self.context['request'].user
+        return (
+            user.is_authenticated
+            and FavoriteSelection.objects.filter(
+                user=user, selection=obj
+            ).exists()
+        )
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
+
+    def get_favorited_by_amount(self, obj):
+        return FavoriteSelection.objects.filter(selection=obj).count()
 
 
 class SubscriptionsSerializer(UserSerializer):
