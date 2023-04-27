@@ -1,16 +1,142 @@
 from django.contrib.auth import get_user_model
 
-from django_filters.rest_framework import FilterSet  # filters
+from dj_rql.constants import FilterLookups
+from dj_rql.filter_cls import RQLFilterClass
+from dj_rql.qs import PrefetchRelated as PR
+
+from recipes.models import Recipe  # Ingredient, Tag
+
+# from django_filters.rest_framework import FilterSet  # filters
+
 
 # from rest_framework.exceptions import NotAuthenticated
 
-# from recipes.models import Ingredient, Recipe, Tag
 
 User = get_user_model()
 
 
-class RecipeFilter(FilterSet):
-    ...
+class RecipeFilters(RQLFilterClass):
+    MODEL = Recipe
+    SELECT = True
+    FILTERS = (
+        {
+            'filter': 'title',
+            'search': True
+        },
+        {
+            'filter': 'description',
+            'search': True
+        },
+        {
+            'filter': 'author',
+            'sources': (
+                            'author__username', 'author__name',
+                            'author__surname'
+                        ),
+            'search': True
+        },
+        {
+            'filter': 'cooking_time',
+            'lookups': {
+                            FilterLookups.GT,
+                            FilterLookups.LT,
+                            FilterLookups.EQ,
+                        }
+        },
+        {
+            'filter': 'servings',
+            'lookups': {
+                            FilterLookups.GT,
+                            FilterLookups.LT,
+                            FilterLookups.EQ,
+                        }
+        },
+        {
+            'namespace': 'cuisine',
+            'qs': PR('cuisine'),
+            'filters': (
+                {
+                    'filter': 'id',
+                    'lookup': FilterLookups.IN
+                },
+                {
+                    'filter': 'name',
+                    'search': True
+                },
+            )
+        },
+        {
+            'filter': 'cuisine',
+            'source': 'cuisine__id',
+            'lookup': FilterLookups.IN
+        },
+        {
+            'namespace': 'ingredients',
+            'qs': PR('ingredients'),
+            'filters': (
+                {
+                    'filter': 'id',
+                    'lookups': {
+                                    FilterLookups.IN,
+                                    FilterLookups.OUT,
+                                }
+                },
+                {
+                    'filter': 'name',
+                    'search': True
+                },
+            )
+        },
+        {
+            'namespace': 'equipment',
+            'qs': PR('equipment'),
+            'filters': (
+                {
+                    'filter': 'id',
+                    'lookups': {
+                                    FilterLookups.IN,
+                                    FilterLookups.OUT,
+                                }
+                },
+                {
+                    'filter': 'name',
+                    'search': True
+                },
+            )
+        },
+        {
+            'namespace': 'tags',
+            'qs': PR('tags'),
+            'filters': (
+                {
+                    'filter': 'id',
+                    'lookup': FilterLookups.IN
+                },
+                {
+                    'filter': 'name',
+                    'search': True
+                },
+            )
+        },
+        {
+            'namespace': 'selections',
+            'qs': PR('selections'),
+            'filters': (
+                {
+                    'filter': 'title',
+                    'search': True
+                },
+                {
+                    'filter': 'description',
+                    'search': True
+                },
+            )
+        },
+    )
+
+
+# class RecipeFilter(FilterSet):
+#     ...
     # is_favorited = filters.BooleanFilter(method='filter_favorited')
     # is_in_shopping_cart = filters.BooleanFilter(
     #     method='filter_shopping_cart'
@@ -49,8 +175,8 @@ class RecipeFilter(FilterSet):
     #     return queryset
 
 
-class IngredientFilter(FilterSet):
-    ...
+# class IngredientFilter(FilterSet):
+#     ...
     # name = filters.CharFilter(field_name='name', lookup_expr='istartswith')
 
     # class Meta:
