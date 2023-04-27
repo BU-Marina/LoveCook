@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 
+from dj_rql.drf.serializers import RQLMixin
 from drf_extra_fields.fields import Base64FileField, Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
@@ -58,7 +59,7 @@ class UserListSerializer(serializers.ModelSerializer):
     ...
 
 
-class AuthorSerializer(serializers.ModelSerializer):
+class AuthorSerializer(RQLMixin, serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
     image = Base64ImageField(read_only=True)
@@ -66,7 +67,7 @@ class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'first_name', 'last_name', 'username', 'image',
+            'id', 'name', 'surname', 'username', 'image',
             'is_subscribed', 'recipes_count'
         )
         read_only_fields = ('id', 'image')
@@ -82,7 +83,7 @@ class AuthorSerializer(serializers.ModelSerializer):
         return obj.recipes.count()
 
 
-class SelectionListSerializer(serializers.ModelSerializer):
+class SelectionListSerializer(RQLMixin, serializers.ModelSerializer):
     author = AuthorSerializer(many=False, read_only=True)
     cover = Base64ImageField(read_only=True)
     is_favorited = serializers.SerializerMethodField()
@@ -113,7 +114,7 @@ class SelectionListSerializer(serializers.ModelSerializer):
         return FavoriteSelection.objects.filter(selection=obj).count()
 
 
-class CookingTimeSerializer(serializers.Serializer):
+class CookingTimeSerializer(RQLMixin, serializers.Serializer):
     hours = serializers.IntegerField(
         default=0,
         min_value=0,
@@ -133,7 +134,7 @@ class CookingTimeSerializer(serializers.Serializer):
         return from_minutes(value)
 
 
-class ImageSerializer(serializers.ModelSerializer):
+class ImageSerializer(RQLMixin, serializers.ModelSerializer):
     image = Base64ImageField(read_only=False)
 
     class Meta:
@@ -154,7 +155,7 @@ class SlugCreatedField(serializers.SlugRelatedField):
             self.fail('invalid')
 
 
-class IngredientSerializer(serializers.ModelSerializer):
+class IngredientSerializer(RQLMixin, serializers.ModelSerializer):
     image = Base64ImageField(read_only=True)
 
     class Meta:
@@ -165,7 +166,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
 
-class IngredientImageSerializer(serializers.ModelSerializer):
+class IngredientImageSerializer(RQLMixin, serializers.ModelSerializer):
     image = Base64ImageField(read_only=True)
 
     class Meta:
@@ -173,7 +174,7 @@ class IngredientImageSerializer(serializers.ModelSerializer):
         fields = ('name', 'image')
 
 
-class StepReprSerializer(serializers.ModelSerializer):
+class StepReprSerializer(RQLMixin, serializers.ModelSerializer):
     ingredients = IngredientImageSerializer(many=True, read_only=True)
 
     class Meta:
@@ -199,7 +200,7 @@ class StepSerializer(serializers.ModelSerializer):
         ).data
 
 
-class RecipeIngredientReprSerializer(serializers.ModelSerializer):
+class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
     ingredient = IngredientSerializer(many=False, read_only=True)
 
     class Meta:
@@ -228,7 +229,7 @@ class EquipmentSerializer(serializers.ModelSerializer):
         fields = ('name', 'image', 'description')
 
 
-class EquipmentListSerializer(serializers.ModelSerializer):
+class EquipmentListSerializer(RQLMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Equipment
@@ -236,7 +237,7 @@ class EquipmentListSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class RecipeReviewSerializer(serializers.ModelSerializer):
+class RecipeReviewSerializer(RQLMixin, serializers.ModelSerializer):
     user = AuthorSerializer(many=False, read_only=True)
 
     class Meta:
@@ -244,7 +245,7 @@ class RecipeReviewSerializer(serializers.ModelSerializer):
         fields = ('user', 'comment')
 
 
-class RecipeReprSerializer(serializers.ModelSerializer):
+class RecipeReprSerializer(RQLMixin, serializers.ModelSerializer):
     author = AuthorSerializer(many=False, read_only=True)
     selections = SelectionListSerializer(
         many=True, read_only=True
@@ -371,7 +372,7 @@ class RecipeListSerializer(RecipeReprSerializer):
     #     ).data
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
     ingredients = RecipeIngredientSerializer(
         many=True, read_only=False, required=True, source='ingredients_info'
     )
