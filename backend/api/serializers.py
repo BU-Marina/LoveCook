@@ -1,3 +1,5 @@
+from itertools import chain
+
 from django.contrib.auth import get_user_model
 
 from dj_rql.drf.serializers import RQLMixin
@@ -19,8 +21,11 @@ RECOMMENDED_BY_LIMIT_DEFAULT = '5'
 MAX_HOURS = MAX_COOKING_TIME // 60
 MAX_TAGS_AMOUNT = 10
 MAX_IMAGES_AMOUNT = 10
+# MIN_STEPS_AMOUNT = 1
+MAX_STEPS_AMOUNT = 20
 MIN_TITLE_LENGTH = 2
 MIN_DESCRIPTION_LENGTH = 8
+MIN_NOTE_LENGTH = 8
 MIN_PHRASE_LENGTH = 3
 
 User = get_user_model()
@@ -189,6 +194,10 @@ class StepReprSerializer(RQLMixin, serializers.ModelSerializer):
 
 
 class StepSerializer(serializers.ModelSerializer):
+    default_error_messages = {
+        'too_short': '{name} должен содержать минимум {min} символа(-ов).',
+        'only_letters': '{name} не должен содержать цифры и символы.',
+    }
 
     class Meta:
         model = Step
@@ -201,6 +210,39 @@ class StepSerializer(serializers.ModelSerializer):
             instance,
             context={'request': self.context.get('request')}
         ).data
+
+    def validate_title(self, value):
+        if value and len(value) < MIN_TITLE_LENGTH:
+            self.fail(
+                'too_short',
+                name='title',
+                min=MIN_TITLE_LENGTH
+            )
+        if not all(symb.isalpha() or symb.isspace() for symb in value):
+            self.fail(
+                'only_letters',
+                name='title'
+            )
+        return value
+
+    def validate_description(self, value):
+        if len(value) < MIN_DESCRIPTION_LENGTH:
+            self.fail(
+                'too_short',
+                name='description',
+                min=MIN_DESCRIPTION_LENGTH
+            )
+        return value
+
+    def validate_note(self, value):
+        if value and len(value) < MIN_NOTE_LENGTH:
+            self.fail(
+                'too_short',
+                name='note',
+                min=MIN_NOTE_LENGTH
+            )
+
+        return value
 
 
 class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
@@ -410,13 +452,19 @@ class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
             '{item} вне диапазона. Должно быть между {min} и {max}.'
         ),
         'no_data': (
-            'Не было передано ни одного {name}, '
-            'должно быть мин 1.'
+            'Ничего не передано в {name}.'
         ),
         'too_many': 'Слишком много {name} (макс {max}).',
-        'too_short': '{name} должно содержать минимум {min} символа(-ов).',
-        'only_letters': '{name} не должно содержать цифры и символы.',
-        'no_digits': '{name} не должна содержать цифры.',
+        'too_short': '{name} должен содержать минимум {min} символа(-ов).',
+        'only_letters': '{name} не должен содержать цифры и символы.',
+        'no_digits': '{name} не должен содержать цифры.',
+        'not_allowed': 'Запрос {method} не должен содержать {field}.',
+        'no_repeat': '{name} не должны повторяться.',
+        'no_match': (
+            '{common_field} в {field} должны состоять из '
+            '{common_field} в recipe.'
+        ),
+        'required': '{field} обязательное поле.',
     }
 
     class Meta:
@@ -461,13 +509,13 @@ class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
         if len(value) < MIN_TITLE_LENGTH:
             self.fail(
                 'too_short',
-                name='Название',
+                name='title',
                 min=MIN_TITLE_LENGTH
             )
         if not all(symb.isalpha() or symb.isspace() for symb in value):
             self.fail(
                 'only_letters',
-                name='Название'
+                name='title'
             )
         return value
 
@@ -475,7 +523,7 @@ class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
         if value and len(value) < MIN_DESCRIPTION_LENGTH:
             self.fail(
                 'too_short',
-                name='Описание',
+                name='description',
                 min=MIN_DESCRIPTION_LENGTH
             )
         return value
@@ -484,13 +532,13 @@ class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
         if value and len(value) < MIN_PHRASE_LENGTH:
             self.fail(
                 'too_short',
-                name='Завершающая фраза',
+                name='ending_phrase',
                 min=MIN_PHRASE_LENGTH
             )
         if any(symb.isdigit() for symb in value):
             self.fail(
                 'no_digits',
-                name='Завершающая фраза'
+                name='ending_phrase'
             )
         return value
 
@@ -498,7 +546,7 @@ class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
         if not (MIN_COOKING_TIME <= value <= MAX_COOKING_TIME):
             self.fail(
                 'out_of_range',
-                item='Cooking_time',
+                item='cooking_time',
                 min=str(MIN_COOKING_TIME) + ' мин',
                 max=str(MAX_HOURS) + ' ч'
             )
@@ -507,10 +555,10 @@ class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
 
     def validate_images(self, data):
         if not data:
-            self.fail('no_data', name='изображения')
+            self.fail('no_data', name='images')
 
         if len(data) > MAX_IMAGES_AMOUNT:
-            self.fail('too_many', name='картинок', max=MAX_IMAGES_AMOUNT)
+            self.fail('too_many', name='images', max=MAX_IMAGES_AMOUNT)
 
         covers_sum = sum([image.get('is_cover') for image in data])
 
@@ -521,29 +569,84 @@ class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
 
     def validate_tags(self, data):
         if len(data) > 10:
-            self.fail('too_many', name='тегов', max=MAX_TAGS_AMOUNT)
+            self.fail('too_many', name='tags', max=MAX_TAGS_AMOUNT)
 
         return data
 
     def validate_ingredients(self, data):
         if not data:
-            self.fail('no_data', name='ингредиента')
+            self.fail('no_data', name='ingredients')
+
+        ingredints_ids = [
+            ing_info['ingredient'] for ing_info in data]
+
+        if len(ingredints_ids) != len(set(ingredints_ids)):
+            self.fail('no_repeat', name='ingredients')
 
         return data
 
-    # def update(self, instance, validated_data):
-    #     if 'recipe_ingredients' in validated_data:
-    #         RecipeIngredient.objects.filter(
-    #             recipe=instance
-    #         ).delete()
-    #         ingredients_data = validated_data.pop('ingredients_info')
-    #         self.set_ingredients(instance, ingredients_data)
+    def validate_selections(self, data):
+        request = self.context.get('request')
+        if data and request.method == 'PATCH':
+            self.fail('not_allowed', method='PATCH', field='selections')
 
-    #     if 'tags' in validated_data:
-    #         tags = validated_data.pop('tags')
-    #         instance.tags.set(tags)
+        return data
 
-    #     return super().update(instance, validated_data)
+    # def validate_reviews(self, data):
+    #     request = self.context.get('request')
+    #     if data and request.method == 'PATCH':
+    #         self.fail('not_allowed', method='PATCH', field='reviews')
+
+    #     return data
+
+    def validate_steps(self, data):
+        if not data:
+            self.fail('no_data', name='steps')
+
+        if len(data) > MAX_STEPS_AMOUNT:
+            self.fail('too_many', name='steps', max=MAX_STEPS_AMOUNT)
+
+        if not all(step.get('description') for step in data):
+            self.fail('required', field='description')
+
+        return data
+
+    def steps_ingds_check(
+            self, ingredients: set, recipe_ingredients: set
+        ):
+        steps_ingredients = set(chain.from_iterable(ingredients))
+        return steps_ingredients <= recipe_ingredients
+
+    def update(self, instance, validated_data):
+        if 'ingredients_info' in validated_data:
+            RecipeIngredient.objects.filter(
+                recipe=instance
+            ).delete()
+            ingredients = validated_data.pop('ingredients_info')
+            self.set_recipe_relation(instance, ingredients, RecipeIngredient)
+
+        if 'steps' in validated_data:
+            steps = validated_data.pop('steps')
+            steps_ingredints = [step['ingredients'] for step in steps]
+            recipe_ingredients = instance.ingredients.all()
+
+            if not self.steps_ingds_check(
+                steps_ingredints, set(recipe_ingredients)
+            ):
+                self.fail(
+                    'no_match',
+                    common_field='ingredients',
+                    field='steps'
+                )
+
+            Step.objects.filter(recipe=instance).delete()
+            for data in steps:
+                ingredients = data.pop('ingredients', [])
+                data['recipe'] = instance
+                step = Step.objects.create(**data)
+                step.ingredients.set(ingredients)
+
+        return super().update(instance, validated_data)
 
     def to_representation(self, instance):
         return RecipeReprSerializer(
