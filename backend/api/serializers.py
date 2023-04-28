@@ -611,9 +611,7 @@ class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
 
         return data
 
-    def steps_ingds_check(
-            self, ingredients: set, recipe_ingredients: set
-        ):
+    def steps_ingds_check(self, ingredients: set, recipe_ingredients: set):
         steps_ingredients = set(chain.from_iterable(ingredients))
         return steps_ingredients <= recipe_ingredients
 
