@@ -10,7 +10,7 @@ from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
-# from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated  # AllowAny
 from rest_framework.response import Response
 
 from recipes.models import FavoriteRecipe, Recipe, Selection
@@ -34,8 +34,10 @@ User = get_user_model()
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
+    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
     permission_classes = [
-        IsAuthorOrReadOnly,
+        # IsAuthorOrReadOnly,
+        IsAuthenticated,
     ]
     pagination_class = CursorSetPagination
     filter_backends = (RQLFilterBackend, filters.OrderingFilter)
@@ -68,16 +70,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #         return RecipeIngredient.objects.filter(
     #             recipe__shoppingcart__user=self.request.user
     #         )
-    #     if self.action == 'favorite':
-    #         return FavoriteRecipe.objects.all()
     #     return Recipe.objects.all()
-
-    # def perform_create(self, serializer):
-    #     serializer.save(author=self.request.user)
 
     def user_recipe_relation(self, request, pk, **kwargs):
         model = kwargs.get('model')
-        error_message = kwargs.get('error_message')
+        not_exist_message = kwargs.get('not_exist_message')
 
         if request.method == 'POST':
             serializer = self.get_serializer(data={
@@ -97,7 +94,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     recipe=recipe
                 )
             except model.DoesNotExist:
-                raise ValidationError(error_message)
+                raise ValidationError(not_exist_message)
 
             self.perform_destroy(relation)
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -108,7 +105,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     # def shopping_cart(self, request, *args, **kwargs):
     #     return self.user_recipe_relation(
     #         request, kwargs, model=ShoppingCart,
-    #         error_message=(
+    #         not_exist_message=(
     #             'Этот рецепт уже не находится в вашем'
     #             'списке покупок.'
     #         )
@@ -118,14 +115,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, *args, **kwargs):
         return self.user_recipe_relation(
             request, kwargs.get('pk'), model=FavoriteRecipe,
-            error_message='Этот рецепт уже не находится у вас в избранном.'
+            not_exist_message='Этот рецепт уже не находится у вас в избранном.'
         )
 
     @action(methods=['get'], detail=False)
     def random(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        filtered_queryset = self.filter_queryset(queryset)
-        recipe = random.choice(filtered_queryset)
+        queryset = self.filter_queryset(self.get_queryset())
+        recipe = random.choice(queryset)
         serializer = RecipeListSerializer(
             recipe, context={'request': request}
         )
@@ -172,6 +168,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class SelectionViewSet(viewsets.ModelViewSet):
     queryset = Selection.objects.all()
     serializer_class = SelectionSerializer
+    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
     permission_classes = [
         IsAuthorOrReadOnly,
     ]
@@ -181,11 +178,11 @@ class SelectionViewSet(viewsets.ModelViewSet):
             return SelectionListSerializer
         return SelectionSerializer
 
-    @action(methods=['get'], detail=True)
+    @action(methods=['get'], detail=True, url_path='random-recipe')
     def random_recipe(self, request, *args, **kwargs):
         selection = get_object_or_404(Selection, pk=kwargs.get('pk'))
-        filtered_queryset = self.filter_queryset(selection.recipes.all())
-        recipe = random.choice(filtered_queryset)
+        queryset = self.filter_queryset(selection.recipes.all())
+        recipe = random.choice(queryset)
         serializer = RecipeListSerializer(
             recipe, context={'request': request}
         )

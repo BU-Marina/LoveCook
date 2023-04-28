@@ -396,6 +396,10 @@ class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
     video = Base64FileField(read_only=False, required=False)
     images = ImageSerializer(many=True, read_only=False)
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    equipment = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=False, required=False,
+        queryset=Equipment.objects.all()
+    )
 
     default_error_messages = {
         'covers_out_of_range': (
@@ -422,7 +426,6 @@ class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
             'cuisine', 'ending_phrase', 'images', 'video', 'tags',
             'selections', 'ingredients', 'steps', 'equipment', 'author'
         )
-        extra_kwargs = {'equipment': {'required': False}}
 
     def set_recipe_relation(self, recipe, objs_data, model) -> None:
         objs = [model(
