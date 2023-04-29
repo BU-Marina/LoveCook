@@ -20,7 +20,7 @@ from .pagination import CursorSetPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, RecipeListSerializer,
                           RecipeSerializer, SelectionListSerializer,
-                          SelectionSerializer)
+                          SelectionSerializer, RecipeIngredientReprSerializer)
 
 # from django.http import HttpResponse
 
@@ -124,6 +124,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = random.choice(queryset)
         serializer = RecipeListSerializer(
             recipe, context={'request': request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=True)
+    def ingredients(self, request, *args, **kwargs):
+        recipe = get_object_or_404(Recipe, pk=kwargs.get('pk'))
+        ingredients = recipe.ingredients_info.all()
+        serializer = RecipeIngredientReprSerializer(
+            ingredients, many=True, context={'request': request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 

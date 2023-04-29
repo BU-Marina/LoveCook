@@ -1,3 +1,5 @@
+from djfractions.models import DecimalFractionField
+
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -360,9 +362,13 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE,
         related_name='recipes_info'
     )
-    amount = models.PositiveIntegerField(
+    amount = DecimalFractionField(
         verbose_name='Количество',
-        help_text='Укажите количество'
+        help_text='Укажите количество',
+        max_digits=4,
+        decimal_places=1,
+        limit_denominator=10,
+        coerce_thirds=False
     )
     measurement_unit = models.CharField(
         max_length=3,
@@ -381,7 +387,9 @@ class RecipeIngredient(models.Model):
 
     def __str__(self) -> str:
         return (f'Ингредиент {self.ingredient} '
-                f'используется в рецепте {self.recipe}')
+                f'используется в рецепте {self.recipe} '
+                f'в кол-ве {self.amount} {self.measurement_unit}'
+            )
 
 
 class FavoriteRecipe(models.Model):

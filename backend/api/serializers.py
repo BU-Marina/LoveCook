@@ -1,4 +1,5 @@
 from itertools import chain
+from fractions import Fraction
 
 from django.contrib.auth import get_user_model
 
@@ -6,6 +7,7 @@ from dj_rql.drf.serializers import RQLMixin
 from drf_extra_fields.fields import Base64FileField, Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.exceptions import ParseError
 
 from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
                             Equipment, FavoriteRecipe, FavoriteSelection,
@@ -247,14 +249,41 @@ class StepSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
     ingredient = IngredientSerializer(many=False, read_only=True)
+    amount = serializers.SerializerMethodField()
 
     class Meta:
         model = RecipeIngredient
         fields = ('ingredient', 'measurement_unit', 'amount')
         read_only_fields = fields
 
+    def fractions_repr(self, fraction):
+        return str(fraction)
+
+    def get_amount(self, obj):
+        request = self.context.get('request')
+        count_servings = request.query_params.get('servings')
+
+        try:
+            count_servings = int(count_servings)
+        except ValueError:
+            raise ParseError(
+                'Передано некорректное значение параметра servings. '
+                'Должно быть целое число.'
+            )
+        except TypeError:
+            pass
+
+        if count_servings:
+            new_amount = obj.amount * Fraction(
+                count_servings/obj.recipe.servings
+            )
+            return self.fractions_repr(new_amount)
+
+        return self.fractions_repr(obj.amount)
+
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
+    amount = serializers.DecimalField(max_digits=4, decimal_places=1)
 
     class Meta:
         model = RecipeIngredient
