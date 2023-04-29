@@ -1,10 +1,10 @@
-from djfractions.models import DecimalFractionField
-
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
+
+from djfractions.models import DecimalFractionField
 
 from core.models import CreatedModel
 
@@ -388,8 +388,7 @@ class RecipeIngredient(models.Model):
     def __str__(self) -> str:
         return (f'Ингредиент {self.ingredient} '
                 f'используется в рецепте {self.recipe} '
-                f'в кол-ве {self.amount} {self.measurement_unit}'
-            )
+                f'в кол-ве {self.amount} {self.measurement_unit}')
 
 
 class FavoriteRecipe(models.Model):

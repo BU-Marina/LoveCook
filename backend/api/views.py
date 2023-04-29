@@ -18,9 +18,9 @@ from recipes.models import FavoriteRecipe, Recipe, Selection
 from .filters import RecipeFilters
 from .pagination import CursorSetPagination
 from .permissions import IsAuthorOrReadOnly
-from .serializers import (FavoriteSerializer, RecipeListSerializer,
-                          RecipeSerializer, SelectionListSerializer,
-                          SelectionSerializer, RecipeIngredientReprSerializer)
+from .serializers import (FavoriteSerializer, RecipeIngredientReprSerializer,
+                          RecipeListSerializer, RecipeSerializer,
+                          SelectionListSerializer, SelectionSerializer)
 
 # from django.http import HttpResponse
 

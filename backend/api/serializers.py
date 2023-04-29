@@ -1,13 +1,13 @@
-from itertools import chain
 from fractions import Fraction
+from itertools import chain
 
 from django.contrib.auth import get_user_model
 
 from dj_rql.drf.serializers import RQLMixin
 from drf_extra_fields.fields import Base64FileField, Base64ImageField
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 from rest_framework.exceptions import ParseError
+from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import (MAX_COOKING_TIME, MIN_COOKING_TIME, Cuisine,
                             Equipment, FavoriteRecipe, FavoriteSelection,
