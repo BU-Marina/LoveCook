@@ -390,6 +390,7 @@ class RecipeIngredient(models.Model):
         ('с л', 'столовая ложка'),
         ('д л', 'десертная ложка'),
         ('пинта', 'пинта'),
+        ('жид пинта', 'жидкая пинта'),
         ('щепотка', 'щепотка'),
         ('по вкусу', 'по вкусу'),
     ]
@@ -413,7 +414,7 @@ class RecipeIngredient(models.Model):
         coerce_thirds=False
     )
     measurement_unit = models.CharField(
-        max_length=8,
+        max_length=9,
         verbose_name='Единица измерения',
         help_text='Выберите единицу измерения',
         choices=MEASUREMENT_UNITS

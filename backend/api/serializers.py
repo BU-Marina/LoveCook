@@ -1,4 +1,5 @@
 from fractions import Fraction
+from decimal import Decimal
 from itertools import chain
 
 from django.contrib.auth import get_user_model
@@ -277,7 +278,8 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
         'ч л': 5,
         'д л': 10,
         'c л': 15,
-        'пинта': 403.2,
+        'пинта': 473.2,
+        'жид пинта': 568.3,
     }
 
     FULL_MEASURES = {
@@ -290,6 +292,7 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
         'д л': 'десертная ложка',
         'c л': 'столовая ложка',
         'пинта': 'пинта',
+        'жид пинта': 'жидкая пинта',
         'чашка': 'чашка',
     }
 
@@ -386,10 +389,29 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
             'типа ингредиента "Приправа". Для приправ выбор из: '
             '{flavoring_measures}.'
         ),
+        'out_of_range': (
+            'Кол-во {ingredient} должно быть от {min} {measure} '
+            'до {max} {measure}.'
+        )
     }
     FLAVORING_MEASURES = [
         'по вкусу', 'щепотка'
     ]
+    MEASURES_AMOUNTS = {
+        'г': (5, 5000),
+        'кг': (0.1, 5),
+        'мл': (5, 5000),
+        'ун': (1, 170),
+        'жид ун': (1, 170),
+        'шт': (1, 20),
+        'чашка': (0.1, 5),
+        'ч л': (0.1, 20),
+        'с л': (0.1, 20),
+        'д л': (0.1, 20),
+        'пинта': (0.1, 10),
+        'жид пинта': (0.1, 10),
+        'щепотка': (1, 10),
+    }
 
     class Meta:
         model = RecipeIngredient
@@ -415,6 +437,18 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
                 'flavoring_measure',
                 measure=measure,
                 flavoring_measures=', '.join(self.FLAVORING_MEASURES)
+            )
+
+        amount = attrs.get('amount')
+        min_amount, max_amount = self.MEASURES_AMOUNTS.get(measure)
+        min_amount = Decimal(str(min_amount))
+        if not (min_amount <= amount <= max_amount):
+            self.fail(
+                'out_of_range',
+                ingredient=ingredient,
+                min=min_amount,
+                max=max_amount,
+                measure=measure
             )
 
         return super().validate(attrs)
