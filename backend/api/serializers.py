@@ -425,7 +425,7 @@ class RecipeReprSerializer(RQLMixin, serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
-            'id','title', 'description', 'servings', 'cooking_time',
+            'id', 'title', 'description', 'servings', 'cooking_time',
             'cuisine', 'ending_phrase', 'images', 'video', 'tags',
             'selections', 'ingredients', 'ingredients_amount', 'steps',
             'steps_amount', 'author', 'is_favorited', 'favorited_by_amount',
