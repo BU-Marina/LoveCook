@@ -249,8 +249,8 @@ class StepSerializer(serializers.ModelSerializer):
 
 class MeasurementSerializer(serializers.Serializer):
     amount = serializers.CharField(max_length=4)
-    unit = serializers.CharField(max_length=2)
-    unit_full = serializers.CharField(max_length=8)
+    measure = serializers.CharField(max_length=2)
+    measure_full = serializers.CharField(max_length=8)
 
 
 class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
@@ -280,6 +280,8 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
         'ч л': 'чайная ложка',
         'д л': 'десертная ложка',
         'c л': 'столовая ложка',
+        'пинта': 'пинта',
+        'чашка': 'чашка',
     }
 
     class Meta:
@@ -316,11 +318,11 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
 
         return self.fractions_repr(obj.amount)
 
-    def get_grams(self, amount, unit):
-        if unit == 'г':
+    def get_grams(self, amount, measure):
+        if measure == 'г':
             return amount
 
-        grams_in_one = self.UNIT_TO_GRAMS.get(unit)
+        grams_in_one = self.UNIT_TO_GRAMS.get(measure)
         if not grams_in_one:
             return None
 
@@ -332,35 +334,37 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
         except AttributeError:
             obj_amount = obj.amount
 
-        request = self.context.get('request')
-        cupgrams = request.query_params.get('cupgrams')
-        if cupgrams:
-            self.UNIT_TO_GRAMS['чашка'] = int(cupgrams)
+        weight = obj.ingredient.one_piece_weight
+        if weight:
+            self.UNIT_TO_GRAMS['шт'] = weight
 
-        obj_unit = obj.measurement_unit
-        grams = self.get_grams(obj_amount, obj_unit)
+        if obj.cupgrams:
+            self.UNIT_TO_GRAMS['чашка'] = obj.cupgrams
+
+        obj_measure = obj.measurement_unit
+        grams = self.get_grams(obj_amount, obj_measure)
         other_measures = []
 
         if grams:
             other_measures.append({
-                'amount': grams, 'unit': 'г', 'unit_full': 'грамм'
+                'amount': grams, 'measure': 'г', 'measure_full': 'грамм'
             })
-            for unit, grams_in_one in self.UNIT_TO_GRAMS.items():
-                if unit == obj_unit:
+            for measure, grams_in_one in self.UNIT_TO_GRAMS.items():
+                if measure == obj_measure:
                     continue
 
                 amount = (Fraction(1/grams_in_one)*grams).limit_denominator()
                 if amount.denominator <= 10:
                     other_measures.append({
                         'amount': amount,
-                        'unit': unit,
-                        'unit_full': self.FULL_UNITS.get(unit)
+                        'measure': measure,
+                        'measure_full': self.FULL_UNITS.get(measure)
                     })
 
         return MeasurementSerializer(
             other_measures,
             many=True,
-            context={'request': request}
+            context={'request': self.context.get('request')}
         ).data
 
 
@@ -369,13 +373,18 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RecipeIngredient
-        fields = ('ingredient', 'measurement_unit', 'amount')
+        fields = ('ingredient', 'measurement_unit', 'amount', 'cupgrams')
 
     def to_representation(self, instance):
         return RecipeIngredientReprSerializer(
             instance,
             context={'request': self.context.get('request')}
         ).data
+
+    def create(self, validated_data):
+        if validated_data.get('measurement_unit') != 'чашка':
+            validated_data['cupgrams'] = None
+        return super().create(validated_data)
 
 
 class EquipmentSerializer(serializers.ModelSerializer):
