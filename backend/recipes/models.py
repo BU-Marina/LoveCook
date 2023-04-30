@@ -56,6 +56,7 @@ class Ingredient(models.Model):
         help_text='Укажите вес 1 шт в граммах',
         null=True
     )
+    is_flavoring = models.BooleanField(verbose_name='Является ли приправой')
     # category = models.CharField(
     #     max_length=1,
     #     choices=CATEGORY
@@ -70,9 +71,28 @@ class Ingredient(models.Model):
         return f'{self.name}'
 
 
-class Flavoring(models.Model):
-    '''Приправа'''
-    ...
+# class Flavoring(models.Model):
+#     '''Приправа'''
+#     name = models.CharField(
+#         max_length=200,
+#         verbose_name='Ингредиент',
+#         help_text='Введите название'
+#     )
+#     description = models.TextField(
+#         verbose_name='Описание',
+#         help_text='Опишите ингредиент'
+#     )
+#     species = models.CharField(
+#         max_length=200,
+#         verbose_name='Подвид',
+#         help_text='Укажите подвид, если нужно',
+#         blank=True
+#     )
+#     image = models.ImageField(
+#         upload_to='ingredients/images',
+#         verbose_name='Фото',
+#         help_text='Загрузите картинку ингредиента'
+#     )
 
 
 class Tag(models.Model):

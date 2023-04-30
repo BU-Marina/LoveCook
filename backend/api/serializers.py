@@ -176,12 +176,13 @@ class IngredientSerializer(RQLMixin, serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = (
-            'type', 'id', 'name', 'species', 'image', 'description'
+            'type', 'id', 'name', 'species', 'image', 'description',
+            'is_flavoring'
         )
         read_only_fields = ('type', 'id')
 
     def get_type(self, obj):
-        return self.Meta.model.__doc__
+        return 'Приправа' if obj.is_flavoring else self.Meta.model.__doc__
 
 
 class IngredientImageSerializer(RQLMixin, serializers.ModelSerializer):
@@ -267,7 +268,7 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
     other_measures = serializers.SerializerMethodField()
     measurement_unit_full = serializers.SerializerMethodField()
 
-    UNIT_TO_GRAMS = {
+    MEASURE_TO_GRAMS = {
         'кг': 1000,
         'л': 1000,
         'мл': 1,
@@ -279,7 +280,7 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
         'пинта': 403.2,
     }
 
-    FULL_UNITS = {
+    FULL_MEASURES = {
         'кг': 'килограмм',
         'л': 'литр',
         'мл': 'миллилитр',
@@ -330,7 +331,7 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
         if measure == 'г':
             return amount
 
-        grams_in_one = self.UNIT_TO_GRAMS.get(measure)
+        grams_in_one = self.MEASURE_TO_GRAMS.get(measure)
         if not grams_in_one:
             return None
 
@@ -344,10 +345,10 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
 
         weight = obj.ingredient.one_piece_weight
         if weight:
-            self.UNIT_TO_GRAMS['шт'] = weight
+            self.MEASURE_TO_GRAMS['шт'] = weight
 
         if obj.cupgrams:
-            self.UNIT_TO_GRAMS['чашка'] = obj.cupgrams
+            self.MEASURE_TO_GRAMS['чашка'] = obj.cupgrams
 
         obj_measure = obj.measurement_unit
         grams = self.get_grams(obj_amount, obj_measure)
@@ -357,7 +358,7 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
             other_measures.append({
                 'amount': grams, 'measure': 'г', 'measure_full': 'грамм'
             })
-            for measure, grams_in_one in self.UNIT_TO_GRAMS.items():
+            for measure, grams_in_one in self.MEASURE_TO_GRAMS.items():
                 if measure == obj_measure:
                     continue
 
@@ -366,7 +367,7 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
                     other_measures.append({
                         'amount': amount,
                         'measure': measure,
-                        'measure_full': self.FULL_UNITS.get(measure)
+                        'measure_full': self.FULL_MEASURES.get(measure)
                     })
 
         return MeasurementSerializer(
@@ -378,6 +379,17 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     amount = serializers.DecimalField(max_digits=4, decimal_places=1)
+
+    default_error_messages = {
+        'flavoring_measure': (
+            'Указана некорректная мера измерения ({measure}) для '
+            'типа ингредиента "Приправа". Для приправ выбор из: '
+            '{flavoring_measures}.'
+        ),
+    }
+    FLAVORING_MEASURES = [
+        'по вкусу', 'щепотка'
+    ]
 
     class Meta:
         model = RecipeIngredient
@@ -393,6 +405,19 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         if validated_data.get('measurement_unit') != 'чашка':
             validated_data['cupgrams'] = None
         return super().create(validated_data)
+
+    def validate(self, attrs):
+        ingredient = attrs.get('ingredient')
+        measure =  attrs.get('measurement_unit')
+
+        if ingredient.is_flavoring and measure not in self.FLAVORING_MEASURES:
+            self.fail(
+                'flavoring_measure',
+                measure=measure,
+                flavoring_measures=', '.join(self.FLAVORING_MEASURES)
+            )
+
+        return super().validate(attrs)
 
 
 class EquipmentSerializer(serializers.ModelSerializer):
@@ -742,12 +767,12 @@ class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
 
         return data
 
-    # def validate_reviews(self, data):
-    #     request = self.context.get('request')
-    #     if data and request.method == 'PATCH':
-    #         self.fail('not_allowed', method='PATCH', field='reviews')
+    def validate_reviews(self, data):
+        request = self.context.get('request')
+        if data and request.method == 'PATCH':
+            self.fail('not_allowed', method='PATCH', field='reviews')
 
-    #     return data
+        return data
 
     def validate_steps(self, data):
         if not data:
