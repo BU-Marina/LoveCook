@@ -13,6 +13,8 @@ MAX_COOKING_TIME = 600
 MIN_INGREDIENTS_AMOUNT = 0.1
 MIN_SERVINGS = 1
 MAX_SERVINGS = 10
+MIN_CUPGRAMS = 50
+MAX_CUPGRAMS = 500
 DEFAULT_CATEGORY_NAME = 'Другое'
 
 User = get_user_model()
@@ -48,7 +50,11 @@ class Ingredient(models.Model):
         verbose_name='Фото',
         help_text='Загрузите картинку ингредиента'
     )
-    # one_piece_weight = ...
+    one_piece_weight = models.PositiveSmallIntegerField(
+        verbose_name='Вес 1 шт (г)',
+        help_text='Укажите вес 1 шт в граммах',
+        null=True
+    )
     # category = models.CharField(
     #     max_length=1,
     #     choices=CATEGORY
@@ -377,6 +383,16 @@ class RecipeIngredient(models.Model):
         verbose_name='Единица измерения',
         help_text='Выберите единицу измерения',
         choices=MEASUREMENT_UNITS
+    )
+    cupgrams = models.PositiveSmallIntegerField(
+        verbose_name='Объем чашки (г)',
+        help_text=('Укажите объем для меры измерения "чашка" '
+                   'для перевода в другие меры измерения'),
+        null=True,
+        validators=[
+            MinValueValidator(MIN_CUPGRAMS),
+            MaxValueValidator(MAX_CUPGRAMS)
+        ]
     )
     note = models.CharField(
         max_length=250,
