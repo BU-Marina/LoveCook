@@ -99,14 +99,18 @@ class SelectionListSerializer(RQLMixin, serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
     favorited_by_amount = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
 
     class Meta:
         model = Selection
         fields = (
-            'id', 'title', 'author', 'cover', 'is_favorited',
+            'type', 'id', 'title', 'author', 'cover', 'is_favorited',
             'recipes_count', 'favorited_by_amount'
         )
         read_only_fields = fields
+
+    def get_type(self, obj):
+        return self.Meta.model.__doc__
 
     def get_is_favorited(self, obj):
         user = self.context['request'].user
@@ -167,13 +171,17 @@ class SlugCreatedField(serializers.SlugRelatedField):
 
 class IngredientSerializer(RQLMixin, serializers.ModelSerializer):
     image = Base64ImageField(read_only=True)
+    type = serializers.SerializerMethodField()
 
     class Meta:
         model = Ingredient
         fields = (
-            'id', 'name', 'species', 'image', 'description'
+            'type', 'id', 'name', 'species', 'image', 'description'
         )
-        read_only_fields = ('id',)
+        read_only_fields = ('type', 'id')
+
+    def get_type(self, obj):
+        return self.Meta.model.__doc__
 
 
 class IngredientImageSerializer(RQLMixin, serializers.ModelSerializer):
@@ -388,26 +396,44 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 class EquipmentSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
 
     class Meta:
         model = Equipment
-        fields = ('name', 'image', 'description')
+        fields = ('type', 'id', 'name', 'image', 'description')
+        read_only_fields = ('type', 'id')
+
+    def get_type(self, obj):
+        return self.Meta.model.__doc__
 
 
-class EquipmentListSerializer(RQLMixin, serializers.ModelSerializer):
+class RecipeReviewReprSerializer(serializers.ModelSerializer):
+    user = AuthorSerializer(many=False, read_only=True)
+    type = serializers.SerializerMethodField()
 
     class Meta:
-        model = Equipment
-        fields = ('id', 'name', 'image')
+        model = RecipeReview
+        fields = ('type', 'id', 'user', 'comment')
         read_only_fields = fields
+
+    def get_type(self, obj):
+        return self.Meta.model.__doc__
 
 
 class RecipeReviewSerializer(RQLMixin, serializers.ModelSerializer):
-    user = AuthorSerializer(many=False, read_only=True)
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    
 
     class Meta:
         model = RecipeReview
         fields = ('user', 'comment')
+        read_only_fields = ('type', 'id')
+
+    def to_representation(self, instance):
+        return RecipeReviewReprSerializer(
+            instance,
+            context={'request': self.context.get('request')}
+        ).data
 
 
 class RecipeReprSerializer(RQLMixin, serializers.ModelSerializer):
@@ -425,7 +451,7 @@ class RecipeReprSerializer(RQLMixin, serializers.ModelSerializer):
     )
     steps = StepSerializer(many=True, read_only=True)
     steps_amount = serializers.SerializerMethodField()
-    equipment = EquipmentListSerializer(many=True, read_only=True)
+    equipment = EquipmentSerializer(many=True, read_only=True)
     cuisine = serializers.SlugRelatedField(
         many=False, read_only=True, slug_field='name'
     )
@@ -437,12 +463,13 @@ class RecipeReprSerializer(RQLMixin, serializers.ModelSerializer):
     reviews = serializers.SerializerMethodField()
     is_recommended = serializers.SerializerMethodField()
     recommended_by = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
     # is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = (
-            'id', 'title', 'description', 'servings', 'cooking_time',
+            'type', 'id', 'title', 'description', 'servings', 'cooking_time',
             'cuisine', 'ending_phrase', 'images', 'video', 'tags',
             'selections', 'ingredients', 'ingredients_amount', 'steps',
             'steps_amount', 'author', 'is_favorited', 'favorited_by_amount',
@@ -450,6 +477,9 @@ class RecipeReprSerializer(RQLMixin, serializers.ModelSerializer):
             'recommended_by', 'reviews'
         )
         read_only_fields = fields
+
+    def get_type(self, obj):
+        return self.Meta.model.__doc__
 
     def get_is_favorited(self, obj):
         user = self.context['request'].user
@@ -519,7 +549,7 @@ class RecipeListSerializer(RecipeReprSerializer):
     class Meta:
         model = Recipe
         fields = (
-            'id', 'title', 'description', 'servings', 'cooking_time',
+            'type', 'id', 'title', 'description', 'servings', 'cooking_time',
             'cuisine', 'images', 'tags', 'ingredients_amount', 'ingredients',
             'steps_amount', 'author', 'is_favorited', 'favorited_by_amount'
         )
@@ -805,14 +835,18 @@ class SelectionSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     favorited_by_amount = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
+    type =  serializers.SerializerMethodField()
 
     class Meta:
         model = Selection
         fields = (
-            'id', 'title', 'is_favorited', 'favorited_by_amount',
+            'type', 'id', 'title', 'is_favorited', 'favorited_by_amount',
             'recipes_count', 'recipes'
         )
-        read_only_fields = ('id',)
+        read_only_fields = ('type', 'id')
+
+    def get_type(self, obj):
+        return self.Meta.model.__doc__
 
     def get_is_favorited(self, obj):
         user = self.context['request'].user

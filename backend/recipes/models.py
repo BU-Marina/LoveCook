@@ -21,6 +21,7 @@ User = get_user_model()
 
 
 class Ingredient(models.Model):
+    '''Ингредиент'''
     # CONDIMENT = 'C'
     # SOLID = 'S'
     # LIQUID = 'L'
@@ -69,7 +70,13 @@ class Ingredient(models.Model):
         return f'{self.name}'
 
 
+class Flavoring(models.Model):
+    '''Приправа'''
+    ...
+
+
 class Tag(models.Model):
+    '''Тег'''
     name = models.CharField(
         max_length=50,
         unique=True,
@@ -82,6 +89,7 @@ class Tag(models.Model):
 
 
 class Category(CreatedModel):
+    '''Категория подборок'''
     name = models.CharField(
         max_length=200,
         unique=True,
@@ -99,6 +107,7 @@ def get_default_category() -> Category:
 
 
 class Selection(CreatedModel):
+    '''Подборка'''
     title = models.CharField(
         max_length=200,
         verbose_name='Название',
@@ -141,6 +150,7 @@ class Selection(CreatedModel):
 
 
 class Cuisine(CreatedModel):
+    '''Национальная кухня'''
     name = models.CharField(
         max_length=200,
         unique=True,
@@ -157,6 +167,7 @@ class Cuisine(CreatedModel):
 
 
 class Equipment(models.Model):
+    '''Оборудование'''
     name = models.CharField(
         max_length=250,
         verbose_name='Название',
@@ -178,6 +189,7 @@ class Equipment(models.Model):
 
 
 class Recipe(CreatedModel):
+    '''Рецепт'''
     title = models.CharField(
         max_length=200,
         verbose_name='Название',
@@ -280,6 +292,7 @@ class Recipe(CreatedModel):
 
 
 class RecipeImage(models.Model):
+    '''Картинка к рецепту'''
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -299,6 +312,7 @@ class RecipeImage(models.Model):
 
 
 class RecipeReview(CreatedModel):
+    '''Отзыв'''
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -505,6 +519,7 @@ class RecommendSelection(models.Model):
 
 
 class Step(models.Model):
+    '''Шаг приготовления'''
     serial_num = models.PositiveSmallIntegerField(
         verbose_name='Порядковый номер',
         help_text='Укажите порядковый номер шага'
@@ -545,6 +560,7 @@ class Step(models.Model):
 
 
 class StepImage(models.Model):
+    '''Картинка к шагу'''
     step = models.ForeignKey(
         Step,
         on_delete=models.CASCADE,
@@ -574,6 +590,7 @@ def image_delete(sender, instance, **kwargs):
 
 
 class ShoppingCart(models.Model):
+    '''Список покупок'''
     ...
     # user = models.ForeignKey(
     #     User,
@@ -594,3 +611,8 @@ class ShoppingCart(models.Model):
 
     # def __str__(self) -> str:
     #     return f'Рецепт {self.recipe} в списке покупок у {self.user}'
+
+
+# class Article(CreatedModel):
+#     ...
+
