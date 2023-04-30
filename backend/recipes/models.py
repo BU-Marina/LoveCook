@@ -378,8 +378,17 @@ class RecipeIngredient(models.Model):
         help_text='Выберите единицу измерения',
         choices=MEASUREMENT_UNITS
     )
-    # note = ...
-    # remark = ...
+    note = models.CharField(
+        max_length=250,
+        verbose_name='Примечание',
+        help_text='Добавьте уточняющие детали к ингредиенту',
+        blank=True
+    )
+    note_image = models.ImageField(
+        upload_to='recipes/ingredients/images/',
+        verbose_name='Картинка примечания',
+        help_text='Добавьте картинку к примечанию'
+    )
 
     class Meta:
         constraints = [

@@ -280,7 +280,6 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
         'ч л': 'чайная ложка',
         'д л': 'десертная ложка',
         'c л': 'столовая ложка',
-        'пинта': 'пинта',
     }
 
     class Meta:
@@ -328,7 +327,16 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
         return amount*grams_in_one
 
     def get_other_measures(self, obj):
-        obj_amount = self.new_amount if self.new_amount else obj.amount
+        try:
+            obj_amount = self.new_amount
+        except AttributeError:
+            obj_amount = obj.amount
+
+        request = self.context.get('request')
+        cupgrams = request.query_params.get('cupgrams')
+        if cupgrams:
+            self.UNIT_TO_GRAMS['чашка'] = int(cupgrams)
+
         obj_unit = obj.measurement_unit
         grams = self.get_grams(obj_amount, obj_unit)
         other_measures = []
@@ -352,7 +360,7 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
         return MeasurementSerializer(
             other_measures,
             many=True,
-            context={'request': self.context.get('request')}
+            context={'request': request}
         ).data
 
 
