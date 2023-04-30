@@ -247,14 +247,50 @@ class StepSerializer(serializers.ModelSerializer):
         return value
 
 
+class MeasurementSerializer(serializers.Serializer):
+    amount = serializers.CharField(max_length=4)
+    unit = serializers.CharField(max_length=2)
+    unit_full = serializers.CharField(max_length=8)
+
+
 class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
     ingredient = IngredientSerializer(many=False, read_only=True)
     amount = serializers.SerializerMethodField()
+    other_measures = serializers.SerializerMethodField()
+    measurement_unit_full = serializers.SerializerMethodField()
+
+    UNIT_TO_GRAMS = {
+        'кг': 1000,
+        'л': 1000,
+        'мл': 1,
+        'ун': 28.35,
+        'жид ун': 28.41,
+        'ч л': 5,
+        'д л': 10,
+        'c л': 15,
+        'пинта': 403.2,
+    }
+
+    FULL_UNITS = {
+        'кг': 'килограмм',
+        'л': 'литр',
+        'мл': 'миллилитр',
+        'ун': 'унция',
+        'жид ун': 'жидкая унция',
+        'ч л': 'чайная ложка',
+        'д л': 'десертная ложка',
+        'c л': 'столовая ложка',
+        'пинта': 'пинта',
+    }
 
     class Meta:
         model = RecipeIngredient
-        fields = ('ingredient', 'measurement_unit', 'amount')
+        fields = ('ingredient', 'amount', 'measurement_unit',
+                  'measurement_unit_full', 'other_measures')
         read_only_fields = fields
+
+    def get_measurement_unit_full(self, obj):
+        return obj.get_measurement_unit_display()
 
     def fractions_repr(self, fraction):
         return str(fraction)
@@ -274,12 +310,50 @@ class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
             pass
 
         if count_servings:
-            new_amount = obj.amount * Fraction(
+            self.new_amount = obj.amount * Fraction(
                 count_servings/obj.recipe.servings
             )
-            return self.fractions_repr(new_amount)
+            return self.fractions_repr(self.new_amount)
 
         return self.fractions_repr(obj.amount)
+
+    def get_grams(self, amount, unit):
+        if unit == 'г':
+            return amount
+
+        grams_in_one = self.UNIT_TO_GRAMS.get(unit)
+        if not grams_in_one:
+            return None
+
+        return amount*grams_in_one
+
+    def get_other_measures(self, obj):
+        obj_amount = self.new_amount if self.new_amount else obj.amount
+        obj_unit = obj.measurement_unit
+        grams = self.get_grams(obj_amount, obj_unit)
+        other_measures = []
+
+        if grams:
+            other_measures.append({
+                'amount': grams, 'unit': 'г', 'unit_full': 'грамм'
+            })
+            for unit, grams_in_one in self.UNIT_TO_GRAMS.items():
+                if unit == obj_unit:
+                    continue
+
+                amount = (Fraction(1/grams_in_one)*grams).limit_denominator()
+                if amount.denominator <= 10:
+                    other_measures.append({
+                        'amount': amount,
+                        'unit': unit,
+                        'unit_full': self.FULL_UNITS.get(unit)
+                    })
+
+        return MeasurementSerializer(
+            other_measures,
+            many=True,
+            context={'request': self.context.get('request')}
+        ).data
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
@@ -351,7 +425,7 @@ class RecipeReprSerializer(RQLMixin, serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
-            'title', 'description', 'servings', 'cooking_time',
+            'id','title', 'description', 'servings', 'cooking_time',
             'cuisine', 'ending_phrase', 'images', 'video', 'tags',
             'selections', 'ingredients', 'ingredients_amount', 'steps',
             'steps_amount', 'author', 'is_favorited', 'favorited_by_amount',

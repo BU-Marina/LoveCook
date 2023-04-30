@@ -48,6 +48,7 @@ class Ingredient(models.Model):
         verbose_name='Фото',
         help_text='Загрузите картинку ингредиента'
     )
+    # one_piece_weight = ...
     # category = models.CharField(
     #     max_length=1,
     #     choices=CATEGORY
@@ -337,19 +338,20 @@ class SelectionRecipe(CreatedModel):
 
 class RecipeIngredient(models.Model):
     MEASUREMENT_UNITS = [
-        ('г', 'г'),
-        ('кг', 'кг'),
+        ('г', 'грамм'),
+        ('кг', 'килограмм'),
         ('л', 'литр'),
-        ('мл', 'мл'),
+        ('мл', 'миллилитр'),
         ('ун', 'унция'),
-        ('шт', 'шт'),
-        ('щ', 'щепотка'),
-        ('ч', 'чашка'),
+        ('жид ун', 'жидкая унция'),
+        ('шт', 'штука'),
+        ('чашка', 'чашка'),
         ('ч л', 'чайная ложка'),
         ('с л', 'столовая ложка'),
         ('д л', 'десертная ложка'),
-        ('п', 'пинта'),
-        ('пв', 'по вкусу'),
+        ('пинта', 'пинта'),
+        ('щепотка', 'щепотка'),
+        ('по вкусу', 'по вкусу'),
     ]
 
     recipe = models.ForeignKey(
@@ -371,11 +373,13 @@ class RecipeIngredient(models.Model):
         coerce_thirds=False
     )
     measurement_unit = models.CharField(
-        max_length=3,
+        max_length=8,
         verbose_name='Единица измерения',
         help_text='Выберите единицу измерения',
         choices=MEASUREMENT_UNITS
     )
+    # note = ...
+    # remark = ...
 
     class Meta:
         constraints = [
