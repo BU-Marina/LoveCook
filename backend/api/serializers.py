@@ -1,5 +1,5 @@
-from fractions import Fraction
 from decimal import Decimal
+from fractions import Fraction
 from itertools import chain
 
 from django.contrib.auth import get_user_model
@@ -430,7 +430,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         ingredient = attrs.get('ingredient')
-        measure =  attrs.get('measurement_unit')
+        measure = attrs.get('measurement_unit')
 
         if ingredient.is_flavoring and measure not in self.FLAVORING_MEASURES:
             self.fail(
@@ -481,7 +481,6 @@ class RecipeReviewReprSerializer(serializers.ModelSerializer):
 
 class RecipeReviewSerializer(RQLMixin, serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    
 
     class Meta:
         model = RecipeReview
@@ -894,7 +893,7 @@ class SelectionSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     favorited_by_amount = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
-    type =  serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
 
     class Meta:
         model = Selection

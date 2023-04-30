@@ -636,4 +636,3 @@ class ShoppingCart(models.Model):
 
 # class Article(CreatedModel):
 #     ...
-
