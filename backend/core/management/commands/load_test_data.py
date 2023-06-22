@@ -11,7 +11,8 @@ from foodgram.settings import BASE_DIR
 from recipes.models import (Category, Cuisine, Equipment, FavoriteRecipe,
                             Ingredient, Recipe, RecipeImage, RecipeIngredient,
                             RecipeReview, RecommendRecipe, Selection,
-                            SelectionRecipe, Step, Tag)
+                            SelectionRecipe, Step, Tag, FavoriteIngredient,
+                            UnfavoriteIngredient)
 
 # from users.models import Follow
 
@@ -54,7 +55,9 @@ class Command(BaseCommand):
         FavoriteRecipe: 'favoriterecipes.json',
         Step: 'steps.json',
         RecommendRecipe: 'recommendrecipes.json',
-        RecipeReview: 'recipereviews.json'
+        RecipeReview: 'recipereviews.json',
+        FavoriteIngredient: 'favoriteingreds.json',
+        UnfavoriteIngredient: 'unfavoriteingreds.json',
     }
     to_convert = {
         Ingredient: {"image": (image64_decode,)},
@@ -82,6 +85,14 @@ class Command(BaseCommand):
         },
         FavoriteRecipe: {
             "recipe": (get_instance, Recipe),
+            "user": (get_instance, User)
+        },
+        FavoriteIngredient: {
+            "ingredient": (get_instance, Ingredient),
+            "user": (get_instance, User)
+        },
+        UnfavoriteIngredient: {
+            "ingredient": (get_instance, Ingredient),
             "user": (get_instance, User)
         },
         Step: {"recipe": (get_instance, Recipe)},
