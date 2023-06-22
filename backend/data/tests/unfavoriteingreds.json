@@ -1,0 +1,10 @@
+[
+    {
+        "user": 1,
+        "ingredient": 1
+    },
+    {
+        "user": 2,
+        "ingredient": 0
+    }
+]
