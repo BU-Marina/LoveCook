@@ -1,6 +1,7 @@
 import random
 
 from django.contrib.auth import get_user_model
+from django.db.models import Count
 
 # from django_filters.rest_framework import DjangoFilterBackend
 from dj_rql.drf import RQLFilterBackend
@@ -10,17 +11,18 @@ from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated  # AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
-from recipes.models import FavoriteRecipe, Recipe, Selection
+from recipes.models import FavoriteRecipe, Recipe, Selection, Ingredient
 
-from .filters import RecipeFilters
-from .pagination import CursorSetPagination
+from .filters import RecipeFilters, IngredientFilters
+from .pagination import CursorSetPagination, LimitPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, RecipeIngredientReprSerializer,
                           RecipeListSerializer, RecipeSerializer,
-                          SelectionListSerializer, SelectionSerializer)
+                          SelectionListSerializer, SelectionSerializer,
+                          IngredientSerializer)
 
 # from django.http import HttpResponse
 
@@ -206,14 +208,37 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    ...
-#     queryset = Ingredient.objects.all()
-#     serializer_class = IngredientSerializer
-#     permission_classes = [
-#         AllowAny,
-#     ]
-#     filter_backends = [DjangoFilterBackend]
-#     filterset_class = IngredientFilter
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+    permission_classes = [
+        AllowAny,
+    ]
+    pagination_class = LimitPagination
+    filter_backends = (RQLFilterBackend, filters.OrderingFilter)
+    rql_filter_class = IngredientFilters
+    ordering_fields = ['name', 'recipes_amount', 'favorited_by_amount']
+    # ordering = ('-recipes_amount',)
+
+    def get_rql_filter_class(self):
+        if self.action == 'recipes':
+            return RecipeFilters
+        return IngredientFilters
+    
+    def get_queryset(self):
+        return Ingredient.objects.annotate(
+            recipes_amount=Count('recipes'),
+            favorited_by_amount=Count('favorited_by')
+        )
+
+    @action(methods=['get'], detail=True)
+    def recipes(self, request, *args, **kwargs):
+        ingredient = get_object_or_404(Ingredient, pk=kwargs.get('pk'))
+        queryset = self.filter_queryset(ingredient.recipes.all())
+        paginated_queryset = self.paginate_queryset(queryset)
+        serializer = RecipeListSerializer(
+            paginated_queryset, many=True, context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
 
 
 class CustomUserViewSet(UserViewSet):

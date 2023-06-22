@@ -126,7 +126,7 @@ class SelectionListSerializer(RQLMixin, serializers.ModelSerializer):
         return obj.recipes.count()
 
     def get_favorited_by_amount(self, obj):
-        return FavoriteSelection.objects.filter(selection=obj).count()
+        return obj.favorited_by.count()
 
 
 class CookingTimeSerializer(RQLMixin, serializers.Serializer):
@@ -170,7 +170,7 @@ class SlugCreatedField(serializers.SlugRelatedField):
             self.fail('invalid')
 
 
-class IngredientSerializer(RQLMixin, serializers.ModelSerializer):
+class IngredientListSerializer(RQLMixin, serializers.ModelSerializer):
     image = Base64ImageField(read_only=True)
     type = serializers.SerializerMethodField()
 
@@ -180,7 +180,7 @@ class IngredientSerializer(RQLMixin, serializers.ModelSerializer):
             'type', 'id', 'name', 'species', 'image', 'description',
             'is_flavoring'
         )
-        read_only_fields = ('type', 'id')
+        read_only_fields = ('type', 'id', 'is_flavoring', 'one_piece_weight')
 
     def get_type(self, obj):
         return 'Приправа' if obj.is_flavoring else self.Meta.model.__doc__
@@ -264,7 +264,7 @@ class MeasurementSerializer(serializers.Serializer):
 
 
 class RecipeIngredientReprSerializer(RQLMixin, serializers.ModelSerializer):
-    ingredient = IngredientSerializer(many=False, read_only=True)
+    ingredient = IngredientListSerializer(many=False, read_only=True)
     amount = serializers.SerializerMethodField()
     other_measures = serializers.SerializerMethodField()
     measurement_unit_full = serializers.SerializerMethodField()
@@ -625,6 +625,19 @@ class RecipeListSerializer(RecipeReprSerializer):
     #     ).data
 
 
+class IngredientSerializer(IngredientListSerializer):
+    favorited_by_amount = serializers.IntegerField()
+    recipes_amount = serializers.IntegerField()
+
+    class Meta():
+        model = Ingredient
+        fields = (
+            'type', 'id', 'name', 'species', 'image', 'description',
+            'is_flavoring', 'one_piece_weight', 'favorited_by_amount',
+            'recipes_amount'
+        )
+
+
 class RecipeSerializer(RQLMixin, serializers.ModelSerializer):
     ingredients = RecipeIngredientSerializer(
         many=True, read_only=False, required=True, source='ingredients_info'
@@ -919,7 +932,7 @@ class SelectionSerializer(serializers.ModelSerializer):
         return obj.recipes.count()
 
     def get_favorited_by_amount(self, obj):
-        return FavoriteSelection.objects.filter(selection=obj).count()
+        return obj.favorited_by.count()
 
 
 class SubscriptionsSerializer(UserSerializer):
