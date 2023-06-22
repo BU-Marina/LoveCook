@@ -56,7 +56,17 @@ class Ingredient(models.Model):
         help_text='Укажите вес 1 шт в граммах',
         null=True
     )
-    is_flavoring = models.BooleanField(verbose_name='Является ли приправой')
+    is_flavoring = models.BooleanField(verbose_name='Является приправой')
+    favorited_by = models.ManyToManyField(
+        User,
+        through='FavoriteIngredient',
+        related_name='favorite_ingredients'
+    )
+    unfavorited_by = models.ManyToManyField(
+        User,
+        through='UnfavoriteIngredient',
+        related_name='unfavorite_ingredients'
+    )
     # category = models.CharField(
     #     max_length=1,
     #     choices=CATEGORY
@@ -286,7 +296,8 @@ class Recipe(CreatedModel):
         Ingredient,
         through='RecipeIngredient',
         verbose_name='Ингредиенты',
-        help_text='Укажите ингредиенты, используемые в рецепте'
+        help_text='Укажите ингредиенты, используемые в рецепте',
+        related_name='recipes'
     )
     equipment = models.ManyToManyField(
         Equipment,
@@ -468,7 +479,8 @@ class FavoriteRecipe(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'recipe'], name='unique_recipe_favorite')
+                fields=['user', 'recipe'], name='unique_recipe_favorite'
+            )
         ]
 
     def __str__(self) -> str:
@@ -488,11 +500,55 @@ class FavoriteSelection(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'selection'], name='unique_selection_favorite')
+                fields=['user', 'selection'], name='unique_selection_favorite'
+            )
         ]
 
     def __str__(self) -> str:
         return f'Подборка {self.selection} в избранном у {self.user}'
+
+
+class FavoriteIngredient(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'ingredient'], name='unique_ingredient_favorite'
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f'Ингредиент {self.ingredient} любимый для {self.user}'
+
+
+class UnfavoriteIngredient(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'ingredient'],
+                name='unique_ingredient_unfavorite'
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f'Ингредиент {self.ingredient} нелюбимый для {self.user}'
 
 
 class RecommendRecipe(models.Model):
@@ -508,7 +564,8 @@ class RecommendRecipe(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'recipe'], name='unique_recipe_recommend')
+                fields=['user', 'recipe'], name='unique_recipe_recommend'
+            )
         ]
 
     def __str__(self) -> str:
