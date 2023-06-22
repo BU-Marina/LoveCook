@@ -1,4 +1,4 @@
-# Foodgram
+# LoveCook
 
 [![CI](https://github.com/BU-Marina/Foodgram/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/BU-Marina/Foodgram/actions/workflows/main.yml)
 
